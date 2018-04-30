@@ -11,6 +11,11 @@ from askbot.search.state_manager import SearchState
 from askbot.utils.html import site_url
 from askbot.utils.functions import get_epoch_str
 
+
+
+def get_action_count(request):
+    return HttpResponse(request.user.actions.all().count())
+
 def get_user_data(user):
     """get common data about the user"""
     avatar_url = user.get_avatar_url()
