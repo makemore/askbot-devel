@@ -81,6 +81,7 @@ from askbot import mail
 from askbot import signals
 from jsonfield import JSONField
 
+
 register_user_signal = partial(signals.register_generic_signal, sender=User)
 
 
@@ -2785,7 +2786,7 @@ def user_get_personal_group(self):
     except Group.DoesNotExist:
         self.join_default_groups()
         return Group.objects.get(name=group_name)
-        
+
 
 def user_get_foreign_groups(self):
     """returns a query set of groups to which user does not belong"""

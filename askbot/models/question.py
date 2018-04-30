@@ -605,6 +605,8 @@ class Thread(models.Model):
     favorited_by = models.ManyToManyField(User, through='FavoriteQuestion',
                                           related_name='unused_favorite_threads')
 
+
+
     closed = models.BooleanField(default=False)
     closed_by = models.ForeignKey(User, null=True, blank=True)  # , related_name='closed_questions')
     closed_at = models.DateTimeField(null=True, blank=True)

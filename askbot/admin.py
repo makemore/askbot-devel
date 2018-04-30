@@ -261,7 +261,9 @@ class IsPersonal(SimpleListFilter):
 
 
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'logo_url', 'description', 'moderate_email', 'moderate_answers_to_enquirers', 'openness', 'is_vip', 'read_only')
+    list_display = (
+    'id', 'name', 'logo_url', 'description', 'moderate_email', 'moderate_answers_to_enquirers', 'openness', 'is_vip',
+    'read_only')
     list_display_links = ('id', 'name')
     list_filter = (IsPersonal, 'moderate_email', 'moderate_answers_to_enquirers', 'openness', 'is_vip', 'read_only')
     search_fields = ('name', 'logo_url')
@@ -282,3 +284,8 @@ admin.site.register(models.Thread, ThreadAdmin)
 admin.site.register(models.question.ThreadToGroup, ThreadToGroupAdmin)
 admin.site.register(models.QuestionView, QuestionViewAdmin)
 admin.site.register(models.ReplyAddress, ReplyAddressAdmin)
+
+from askbot.models.invites import Invite
+admin.site.register(Invite)
+from askbot.models.actions import Action
+admin.site.register(Action)
