@@ -102,6 +102,7 @@ class UserEmailVerifier(models.Model):
     value = PickledObjectField()
     verified = models.BooleanField(default=False)
     expires_on = models.DateTimeField(blank=True)
+    invite_code = models.CharField(null=True, blank=True, max_length=255)
 
     def save(self, *args, **kwargs):
         if not self.expires_on:

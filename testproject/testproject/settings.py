@@ -314,7 +314,7 @@ JINJA2_TEMPLATES = ('captcha',)
 # fail spuriously in MySQL.
 SOUTH_TESTS_MIGRATE = False
 
-VERIFIER_EXPIRE_DAYS = 3
+VERIFIER_EXPIRE_DAYS = 10
 AVATAR_AUTO_GENERATE_SIZES = (16, 32, 48, 128) #change if avatars are sized differently
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'

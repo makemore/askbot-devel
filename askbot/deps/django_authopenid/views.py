@@ -1317,6 +1317,10 @@ def verify_email_and_register(request):
             login(request, user)
             email_verifier.verified = True
             email_verifier.save()
+
+            if email_verifier.invite_code:
+                Invite.assign_new_user_to_invite_actions(user, email_verifier.invite_code)
+
             cleanup_post_register_session(request)
 
             return HttpResponseRedirect(get_next_url(request))
@@ -1374,6 +1378,8 @@ def signup_with_password(request):
                 email_verifier.value = {'username': username,
                                         'login_provider_name': 'local',
                                         'email': email, 'password': password}
+                if post_invite_code:
+                    email_verifier.invite_code = post_invite_code
                 email_verifier.save()
                 send_email_key(
                     email, email_verifier.key,
