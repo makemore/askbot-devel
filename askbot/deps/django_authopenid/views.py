@@ -69,6 +69,7 @@ from openid.consumer.consumer import Consumer, \
     SUCCESS, CANCEL, FAILURE, SETUP_NEEDED
 from openid.consumer.discover import DiscoveryFailure
 from openid.extensions import sreg
+
 # needed for some linux distributions like debian
 try:
     from openid.yadis import xri
@@ -82,7 +83,6 @@ try:
 except ImportError:
     pass
 
-
 import urllib
 from askbot import forms as askbot_forms
 from askbot.deps.django_authopenid import util
@@ -93,7 +93,7 @@ import logging
 from askbot.utils.forms import get_next_url
 from askbot.utils.http import get_request_info
 from askbot.signals import user_logged_in, user_registered
-
+from askbot.models.invites import Invite
 
 def get_next_url_from_session(session):
     return session.pop('next_url', None) or reverse('index')
@@ -118,10 +118,10 @@ def create_authenticated_user_account(
         user.save()
     else:
         UserAssociation(
-            openid_url = user_identifier,
-            user = user,
-            provider_name = login_provider_name,
-            last_used_timestamp = timezone.now()
+            openid_url=user_identifier,
+            user=user,
+            provider_name=login_provider_name,
+            last_used_timestamp=timezone.now()
         ).save()
 
     subscribe_form = askbot_forms.SimpleEmailSubscribeForm({'subscribe': 'y'})
@@ -155,7 +155,7 @@ def cleanup_post_register_session(request):
             del request.session[key]
 
 
-#todo: decouple from askbot
+# todo: decouple from askbot
 def login(request, user):
     from django.contrib.auth import login as _login
 
@@ -167,19 +167,21 @@ def login(request, user):
 
     # send signal with old session key as argument
     logging.debug('logged in user %s with session key %s' % (user.username, session_key))
-    #todo: move to auth app
+    # todo: move to auth app
     user_logged_in.send(
-                    request=request,
-                    user=user,
-                    session_key=session_key,
-                    sender=None
-                )
+        request=request,
+        user=user,
+        session_key=session_key,
+        sender=None
+    )
 
-#todo: uncouple this from askbot
+
+# todo: uncouple this from askbot
 def logout(request):
-    from django.contrib.auth import logout as _logout#for login I've added wrapper below - called login
+    from django.contrib.auth import logout as _logout  # for login I've added wrapper below - called login
     _logout(request)
     connect_messages_to_anon_user(request)
+
 
 def logout_page(request):
     data = {
@@ -187,6 +189,7 @@ def logout_page(request):
         'have_federated_login_methods': util.have_enabled_federated_login_methods()
     }
     return render(request, 'authopenid/logout.html', data)
+
 
 def get_url_host(request):
     if request.is_secure():
@@ -196,21 +199,23 @@ def get_url_host(request):
     host = escape(request.get_host())
     return '%s://%s' % (protocol, host)
 
+
 def get_full_url(request):
     return get_url_host(request) + request.get_full_path()
 
+
 def ask_openid(
-            request,
-            openid_url,
-            redirect_to,
-            sreg_request=None
-        ):
+    request,
+    openid_url,
+    redirect_to,
+    sreg_request=None
+):
     """ basic function to ask openid and return response """
     trust_root = getattr(
         django_settings, 'OPENID_TRUST_ROOT', get_url_host(request) + '/'
     )
     if xri.identifierScheme(openid_url) == 'XRI' and getattr(
-            django_settings, 'OPENID_DISALLOW_INAMES', False
+        django_settings, 'OPENID_DISALLOW_INAMES', False
     ):
         msg = _("i-names are not supported")
         logging.debug('openid failed because i-names are not supported')
@@ -220,7 +225,7 @@ def ask_openid(
         auth_request = consumer.begin(openid_url)
     except DiscoveryFailure:
         openid_url = cgi.escape(openid_url)
-        msg = _(u"OpenID %(openid_url)s is invalid" % {'openid_url':openid_url})
+        msg = _(u"OpenID %(openid_url)s is invalid" % {'openid_url': openid_url})
         logging.debug(msg)
         return signin_failure(request, msg)
 
@@ -236,10 +241,12 @@ def ask_openid(
 def not_authenticated(func):
     """ decorator that redirect user to next page if
     he/she is already logged in."""
+
     def decorated(request, *args, **kwargs):
         if request.user.is_authenticated():
             return HttpResponseRedirect(get_next_url(request))
         return func(request, *args, **kwargs)
+
     return decorated
 
 
@@ -257,88 +264,88 @@ def complete_oauth2_signin(request):
     providers = util.get_enabled_login_providers()
     provider_name = request.session.pop('provider_name')
     params = providers[provider_name]
-    assert(params['type'] == 'oauth2')
+    assert (params['type'] == 'oauth2')
 
     name_token = format_setting_name(provider_name)
     client_id = getattr(
-            askbot_settings,
-            name_token + '_KEY',
-        )
+        askbot_settings,
+        name_token + '_KEY',
+    )
 
     client_secret = getattr(
-            askbot_settings,
-            name_token + '_SECRET',
-        )
+        askbot_settings,
+        name_token + '_SECRET',
+    )
 
     client = OAuth2Client(
-            token_endpoint=params['token_endpoint'],
-            resource_endpoint=params['resource_endpoint'],
-            redirect_uri=site_url(reverse('user_complete_oauth2_signin')),
-            client_id=client_id,
-            client_secret=client_secret,
-            token_transport=params.get('token_transport', None)
-        )
+        token_endpoint=params['token_endpoint'],
+        resource_endpoint=params['resource_endpoint'],
+        redirect_uri=site_url(reverse('user_complete_oauth2_signin')),
+        client_id=client_id,
+        client_secret=client_secret,
+        token_transport=params.get('token_transport', None)
+    )
 
     client.request_token(
         code=request.GET['code'],
         parser=params.get('response_parser', None)
     )
 
-    #todo: possibly set additional parameters here
+    # todo: possibly set additional parameters here
     user_id = params['get_user_id_function'](client)
 
     user = authenticate(
-                user_identifier=user_id,
-                provider_name=provider_name,
-                method='identifier'
-            )
+        user_identifier=user_id,
+        provider_name=provider_name,
+        method='identifier'
+    )
 
     logging.debug('finalizing oauth signin')
 
-    request.session['email'] = ''#todo: pull from profile
-    request.session['username'] = ''#todo: pull from profile
+    request.session['email'] = ''  # todo: pull from profile
+    request.session['username'] = ''  # todo: pull from profile
 
     if provider_name == 'facebook':
         profile = client.request("me")
         request.session['email'] = profile.get('email', '')
         request.session['username'] = profile.get('username', '')
     elif provider_name == 'google-plus' and user is None:
-        #todo: factor this out into separate function
-        #attempt to migrate user from the old OpenId protocol
+        # todo: factor this out into separate function
+        # attempt to migrate user from the old OpenId protocol
         openid_url, email = util.google_gplus_get_openid_data(client)
         if openid_url:
             msg_tpl = 'trying to migrate user from OpenID %s to g-plus %s'
             logging.critical(msg_tpl, str(openid_url), str(user_id))
             user = authenticate(
-                        method='identifier',
-                        provider_name='google',
-                        user_identifier=openid_url
-                   )
+                method='identifier',
+                provider_name='google',
+                user_identifier=openid_url
+            )
             if user:
                 util.google_migrate_from_openid_to_gplus(openid_url, user_id)
                 logging.critical('migrated login from OpenID to g-plus')
             elif email:
                 user = authenticate(
-                            method='email',
-                            email=email
-                            #don't check whether email was validated
-                        )
+                    method='email',
+                    email=email
+                    # don't check whether email was validated
+                )
                 if user:
-                    #create association
+                    # create association
                     assoc = UserAssociation(
-                                        user=user,
-                                        openid_url=user_id,
-                                        provider_name='google-plus'
-                                    )
+                        user=user,
+                        openid_url=user_id,
+                        provider_name='google-plus'
+                    )
                     assoc.save()
 
     return finalize_generic_signin(
-                        request=request,
-                        user=user,
-                        user_identifier=user_id,
-                        login_provider_name=provider_name,
-                        redirect_url=next_url
-                    )
+        request=request,
+        user=user,
+        user_identifier=user_id,
+        login_provider_name=provider_name,
+        redirect_url=next_url
+    )
 
 
 def complete_cas_signin(request):
@@ -358,19 +365,19 @@ def complete_cas_signin(request):
     user_identifier = username + '@cas'
 
     user = authenticate(
-                        method='identifier',
-                        user_identifier=user_identifier,
-                        provider_name='cas'
-                       )
+        method='identifier',
+        user_identifier=user_identifier,
+        provider_name='cas'
+    )
 
-    #<----
-    #settings ASKBOT_CAS_USER_FILTER, ASKBOT_CAS_GET_USERNAME, ASKBOT_CAS_GET_EMAIL
-    #are temporary, to be replaced by ability to specify custom auth backend.
+    # <----
+    # settings ASKBOT_CAS_USER_FILTER, ASKBOT_CAS_GET_USERNAME, ASKBOT_CAS_GET_EMAIL
+    # are temporary, to be replaced by ability to specify custom auth backend.
     user_filter_path = django_settings.ASKBOT_CAS_USER_FILTER
     if user_filter_path:
         user_filter_func = load_module(user_filter_path)
         if user_filter_func(username) == False:
-            #de-authenticate the user
+            # de-authenticate the user
             user = None
             deny_msg = django_settings.CAS_USER_FILTER_DENIED_MSG
             if deny_msg:
@@ -388,15 +395,15 @@ def complete_cas_signin(request):
     if get_email_func_path:
         get_email_func = load_module(get_email_func_path)
         request.session['email'] = get_email_func(username)
-    #<----end of temp stuff
+    # <----end of temp stuff
 
     return finalize_generic_signin(
-                        request=request,
-                        user=user,
-                        user_identifier=user_identifier,
-                        login_provider_name='cas',
-                        redirect_url=next_url
-                    )
+        request=request,
+        user=user,
+        user_identifier=user_identifier,
+        login_provider_name='cas',
+        redirect_url=next_url
+    )
 
 
 def complete_oauth1_signin(request):
@@ -414,7 +421,7 @@ def complete_oauth1_signin(request):
         logging.debug('have verifier %s' % oauth_verifier)
         session_oauth_token = request.session['oauth_token']
         logging.debug('have token from session')
-        assert(oauth_token == session_oauth_token['oauth_token'])
+        assert (oauth_token == session_oauth_token['oauth_token'])
 
         oauth_provider_name = request.session['oauth_provider_name']
         logging.debug('have saved provider name')
@@ -422,9 +429,9 @@ def complete_oauth1_signin(request):
 
         oauth = util.OAuthConnection(oauth_provider_name)
         oauth.obtain_access_token(
-                            oauth_token=session_oauth_token,
-                            oauth_verifier=oauth_verifier
-                        )
+            oauth_token=session_oauth_token,
+            oauth_verifier=oauth_verifier
+        )
         user_id = oauth.get_user_id()
         request.session['email'] = oauth.get_user_email()
         request.session['username'] = oauth.get_username()
@@ -435,25 +442,25 @@ def complete_oauth1_signin(request):
         msg = _('Unfortunately, there was some problem when '
                 'connecting to %(provider)s, please try again '
                 'or use another provider'
-            ) % {'provider': request.session['oauth_provider_name']}
+                ) % {'provider': request.session['oauth_provider_name']}
         request.user.message_set.create(message=msg)
         return HttpResponseRedirect(next_url)
     else:
         user = authenticate(
-                            method='identifier',
-                            user_identifier=user_id,
-                            provider_name=oauth_provider_name,
-                           )
+            method='identifier',
+            user_identifier=user_id,
+            provider_name=oauth_provider_name,
+        )
 
         logging.debug('finalizing oauth signin')
 
         return finalize_generic_signin(
-                            request=request,
-                            user=user,
-                            user_identifier=user_id,
-                            login_provider_name=oauth_provider_name,
-                            redirect_url=next_url
-                        )
+            request=request,
+            user=user,
+            user_identifier=user_id,
+            login_provider_name=oauth_provider_name,
+            redirect_url=next_url
+        )
 
 
 @csrf.csrf_protect
@@ -469,11 +476,11 @@ def signin(request, template_name='authopenid/signin.html'):
     logging.debug('in signin view')
     on_failure = signin_failure
 
-    #we need a special priority on where to redirect on successful login
-    #here:
-    #1) url parameter "next" - if explicitly set
-    #2) url from django setting LOGIN_REDIRECT_URL
-    #3) home page of the forum
+    # we need a special priority on where to redirect on successful login
+    # here:
+    # 1) url parameter "next" - if explicitly set
+    # 2) url from django setting LOGIN_REDIRECT_URL
+    # 3) home page of the forum
     login_redirect_url = getattr(django_settings, 'LOGIN_REDIRECT_URL', None)
     next_url = get_next_url(request, default=login_redirect_url)
     logging.debug('next url is %s' % next_url)
@@ -487,7 +494,7 @@ def signin(request, template_name='authopenid/signin.html'):
 
     login_form = forms.LoginForm(initial={'next': next_url})
 
-    #todo: get next url make it sticky if next is 'user_signin'
+    # todo: get next url make it sticky if next is 'user_signin'
     if request.method == 'POST':
 
         login_form = forms.LoginForm(request.POST)
@@ -497,33 +504,33 @@ def signin(request, template_name='authopenid/signin.html'):
 
                 password_action = login_form.cleaned_data['password_action']
                 if askbot_settings.USE_LDAP_FOR_PASSWORD_LOGIN:
-                    assert(password_action == 'login')
+                    assert (password_action == 'login')
                     username = login_form.cleaned_data['username']
                     password = login_form.cleaned_data['password']
 
                     user = authenticate(
-                                    method='ldap',
-                                    username=username,
-                                    password=password,
-                                    request=request
-                                )
+                        method='ldap',
+                        username=username,
+                        password=password,
+                        request=request
+                    )
 
                     if user:
                         login(request, user)
                         return HttpResponseRedirect(next_url)
                     else:
-                        #try to login again via LDAP
+                        # try to login again via LDAP
                         user_info = ldap_authenticate(username, password)
                         if user_info['success']:
                             if askbot_settings.LDAP_AUTOCREATE_USERS:
-                                #create new user or
+                                # create new user or
                                 user = ldap_create_user(user_info).user
                                 user = authenticate(method='force', user_id=user.pk)
-                                assert(user is not None)
+                                assert (user is not None)
                                 login(request, user)
                                 return HttpResponseRedirect(next_url)
                             else:
-                                #continue with proper registration
+                                # continue with proper registration
                                 ldap_username = user_info['ldap_username']
                                 request.session['email'] = user_info['email']
                                 request.session['ldap_user_info'] = user_info
@@ -535,37 +542,37 @@ def signin(request, template_name='authopenid/signin.html'):
                                         user_info['last_name']
                                 return finalize_generic_signin(
                                     request,
-                                    login_provider_name = 'ldap',
-                                    user_identifier = ldap_username + '@ldap',
-                                    redirect_url = next_url
+                                    login_provider_name='ldap',
+                                    user_identifier=ldap_username + '@ldap',
+                                    redirect_url=next_url
                                 )
                         else:
                             auth_fail_func_path = getattr(
-                                                django_settings,
-                                                'LDAP_AUTHENTICATE_FAILURE_FUNCTION',
-                                                None
-                                            )
+                                django_settings,
+                                'LDAP_AUTHENTICATE_FAILURE_FUNCTION',
+                                None
+                            )
 
                             if auth_fail_func_path:
                                 auth_fail_func = load_module(auth_fail_func_path)
                                 auth_fail_func(user_info, login_form)
                             else:
                                 login_form.set_password_login_error()
-                            #return HttpResponseRedirect(request.path)
+                            # return HttpResponseRedirect(request.path)
                 else:
                     if password_action == 'login':
                         user = authenticate(
-                                            method='password',
-                                            username=login_form.cleaned_data['username'],
-                                            password=login_form.cleaned_data['password'],
-                                            provider_name=provider_name
-                                           )
+                            method='password',
+                            username=login_form.cleaned_data['username'],
+                            password=login_form.cleaned_data['password'],
+                            provider_name=provider_name
+                        )
                         if user is None:
                             login_form.set_password_login_error()
                         else:
                             login(request, user)
-                            #todo: here we might need to set cookies
-                            #for external login sites
+                            # todo: here we might need to set cookies
+                            # for external login sites
                             return HttpResponseRedirect(next_url)
                     elif password_action == 'change_password':
                         if request.user.is_authenticated():
@@ -574,8 +581,8 @@ def signin(request, template_name='authopenid/signin.html'):
                             request.user.set_password(new_password)
                             request.user.save()
                             request.user.message_set.create(
-                                        message = _('Your new password is saved')
-                                    )
+                                message=_('Your new password is saved')
+                            )
                             return HttpResponseRedirect(next_url)
                     else:
                         logging.critical(
@@ -588,18 +595,18 @@ def signin(request, template_name='authopenid/signin.html'):
                 email = util.mozilla_persona_get_email_from_assertion(assertion)
                 if email:
                     user = authenticate(
-                                method='identifier',
-                                user_identifier=email,
-                                provider_name='mozilla-persona'
-                            )
+                        method='identifier',
+                        user_identifier=email,
+                        provider_name='mozilla-persona'
+                    )
                     if user is None:
                         user = authenticate(email=email, method='email')
                         if user and user.email_isvalid == False:
                             user = None
                         if user:
-                            #create mozilla persona user association
-                            #because we trust the given email address belongs
-                            #to the same user
+                            # create mozilla persona user association
+                            # because we trust the given email address belongs
+                            # to the same user
                             UserAssociation(
                                 openid_url=email,
                                 user=user,
@@ -611,8 +618,8 @@ def signin(request, template_name='authopenid/signin.html'):
                         login(request, user)
                         return HttpResponseRedirect(next_url)
 
-                    #else - create new user account
-                    #pre-fill email address with persona registration
+                    # else - create new user account
+                    # pre-fill email address with persona registration
                     request.session['email'] = email
                     return finalize_generic_signin(
                         request,
@@ -622,25 +629,25 @@ def signin(request, template_name='authopenid/signin.html'):
                     )
 
             elif login_form.cleaned_data['login_type'] == 'openid':
-                #initiate communication process
+                # initiate communication process
                 logging.debug('processing signin with openid submission')
 
-                #todo: make a simple-use wrapper for openid protocol
+                # todo: make a simple-use wrapper for openid protocol
                 if login_form.cleaned_data['sreg_required']:
                     sreg_req = sreg.SRegRequest(required=['nickname', 'email'])
                 else:
                     sreg_req = sreg.SRegRequest(optional=['nickname', 'email'])
                 redirect_to = "%s%s?%s" % (
-                        get_url_host(request),
-                        reverse('user_complete_openid_signin'),
-                        urllib.urlencode({'next':next_url})
+                    get_url_host(request),
+                    reverse('user_complete_openid_signin'),
+                    urllib.urlencode({'next': next_url})
                 )
                 return ask_openid(
-                            request,
-                            login_form.cleaned_data['openid_url'],
-                            redirect_to,
-                            sreg_request=sreg_req
-                        )
+                    request,
+                    login_form.cleaned_data['openid_url'],
+                    redirect_to,
+                    sreg_request=sreg_req
+                )
 
             elif login_form.cleaned_data['login_type'] == 'cas':
                 from askbot.deps.django_authopenid.providers.cas_provider import CASLoginProvider
@@ -650,7 +657,7 @@ def signin(request, template_name='authopenid/signin.html'):
 
             elif login_form.cleaned_data['login_type'] == 'oauth':
                 try:
-                    #this url may need to have "next" piggibacked onto
+                    # this url may need to have "next" piggibacked onto
                     connection = util.OAuthConnection(provider_name)
                     connection.start(
                         callback_url=reverse('user_complete_oauth1_signin')
@@ -658,7 +665,7 @@ def signin(request, template_name='authopenid/signin.html'):
 
                     request.session['oauth_token'] = connection.get_token()
                     request.session['oauth_provider_name'] = provider_name
-                    request.session['next_url'] = next_url#special case for oauth
+                    request.session['next_url'] = next_url  # special case for oauth
 
                     oauth_url = connection.get_auth_url(login_only=True)
                     return HttpResponseRedirect(oauth_url)
@@ -668,7 +675,7 @@ def signin(request, template_name='authopenid/signin.html'):
                     msg = _('Unfortunately, there was some problem when '
                             'connecting to %(provider)s, please try again '
                             'or use another provider'
-                        ) % {'provider': provider_name}
+                            ) % {'provider': provider_name}
                     request.user.message_set.create(message=msg)
 
             elif login_form.cleaned_data['login_type'] == 'oauth2':
@@ -684,37 +691,37 @@ def signin(request, template_name='authopenid/signin.html'):
                     msg = _('Unfortunately, there was some problem when '
                             'connecting to %(provider)s, please try again '
                             'or use another provider'
-                        ) % {'provider': provider_name}
+                            ) % {'provider': provider_name}
                     request.user.message_set.create(message=msg)
 
             elif login_form.cleaned_data['login_type'] == 'wordpress_site':
-                #here wordpress_site means for a self hosted wordpress blog not a wordpress.com blog
+                # here wordpress_site means for a self hosted wordpress blog not a wordpress.com blog
                 wp = Client(
-                            askbot_settings.WORDPRESS_SITE_URL,
-                            login_form.cleaned_data['username'],
-                            login_form.cleaned_data['password']
-                        )
+                    askbot_settings.WORDPRESS_SITE_URL,
+                    login_form.cleaned_data['username'],
+                    login_form.cleaned_data['password']
+                )
                 try:
                     wp_user = wp.call(GetUserInfo())
                     wp_user_identifier = '%s?user_id=%s' % (wp.url, wp_user.user_id)
                     user = authenticate(
-                                        method='identifier',
-                                        user_identifier=wp_user_identifier,
-                                        provider_name='wordpress_site'
-                                       )
+                        method='identifier',
+                        user_identifier=wp_user_identifier,
+                        provider_name='wordpress_site'
+                    )
                     return finalize_generic_signin(
-                                    request=request,
-                                    user=user,
-                                    user_identifier=wp_user_identifier,
-                                    login_provider_name=provider_name,
-                                    redirect_url=next_url
-                                )
+                        request=request,
+                        user=user,
+                        user_identifier=wp_user_identifier,
+                        login_provider_name=provider_name,
+                        redirect_url=next_url
+                    )
                 except WpFault as e:
                     logging.critical(unicode(e))
                     msg = _('The login password combination was not correct')
-                    request.user.message_set.create(message = msg)
+                    request.user.message_set.create(message=msg)
             else:
-                #raise 500 error - unknown login type
+                # raise 500 error - unknown login type
                 pass
         else:
             logging.debug('login form is not valid')
@@ -726,33 +733,34 @@ def signin(request, template_name='authopenid/signin.html'):
         view_subtype = 'default'
 
     return show_signin_view(
-                            request,
-                            login_form=login_form,
-                            view_subtype=view_subtype,
-                            template_name=template_name
-                           )
+        request,
+        login_form=login_form,
+        view_subtype=view_subtype,
+        template_name=template_name
+    )
+
 
 @csrf.csrf_protect
 def show_signin_view(
-                request,
-                login_form = None,
-                account_recovery_form = None,
-                account_recovery_message = None,
-                sticky = False,
-                view_subtype = 'default',
-                template_name='authopenid/signin.html'
-            ):
+    request,
+    login_form=None,
+    account_recovery_form=None,
+    account_recovery_message=None,
+    sticky=False,
+    view_subtype='default',
+    template_name='authopenid/signin.html'
+):
     """url-less utility function that populates
     context of template 'authopenid/signin.html'
     and returns its rendered output
     """
 
     allowed_subtypes = (
-                    'default', 'add_openid',
-                    'email_sent', 'change_openid'
-                )
+        'default', 'add_openid',
+        'email_sent', 'change_openid'
+    )
 
-    assert(view_subtype in allowed_subtypes)
+    assert (view_subtype in allowed_subtypes)
 
     if sticky:
         next_url = reverse('user_signin')
@@ -760,16 +768,16 @@ def show_signin_view(
         next_url = get_next_url(request)
 
     if login_form is None:
-        login_form = forms.LoginForm(initial = {'next': next_url})
+        login_form = forms.LoginForm(initial={'next': next_url})
     if account_recovery_form is None:
-        account_recovery_form = forms.AccountRecoveryForm()#initial = initial_data)
+        account_recovery_form = forms.AccountRecoveryForm()  # initial = initial_data)
 
-    #if request is GET
+    # if request is GET
     if request.method == 'GET':
         logging.debug('request method was GET')
 
-    #todo: this sthuff must be executed on some signal
-    #because askbot should have nothing to do with the login app
+    # todo: this sthuff must be executed on some signal
+    # because askbot should have nothing to do with the login app
     from askbot.models import AnonymousQuestion as AQ
     session_key = request.session.session_key
     logging.debug('retrieving anonymously posted question associated with session %s' % session_key)
@@ -789,15 +797,15 @@ def show_signin_view(
         answer = None
 
     if request.user.is_authenticated():
-        existing_login_methods = UserAssociation.objects.filter(user = request.user)
-        #annotate objects with extra data
+        existing_login_methods = UserAssociation.objects.filter(user=request.user)
+        # annotate objects with extra data
         providers = util.get_enabled_login_providers()
         for login_method in existing_login_methods:
             try:
                 provider_data = providers[login_method.provider_name]
                 if provider_data['type'] == 'password':
-                    #only external password logins will not be deletable
-                    #this is because users with those can lose access to their accounts permanently
+                    # only external password logins will not be deletable
+                    # this is because users with those can lose access to their accounts permanently
                     login_method.is_deletable = provider_data.get('password_changeable', False)
                 else:
                     login_method.is_deletable = True
@@ -809,8 +817,6 @@ def show_signin_view(
                     login_method.provider_name
                 )
                 continue
-
-
 
     if view_subtype == 'default':
         page_title = _('Please click any of the icons below to sign in')
@@ -830,14 +836,14 @@ def show_signin_view(
     logging.debug('showing signin view')
     data = {
         'page_class': 'openid-signin',
-        'view_subtype': view_subtype, #add_openid|default
+        'view_subtype': view_subtype,  # add_openid|default
         'page_title': page_title,
         'question': question,
         'answer': answer,
         'login_form': login_form,
         'use_password_login': util.use_password_login(),
         'account_recovery_form': account_recovery_form,
-        'openid_error_message':  request.REQUEST.get('msg',''),
+        'openid_error_message': request.REQUEST.get('msg', ''),
         'account_recovery_message': account_recovery_message,
         'use_password_login': util.use_password_login(),
     }
@@ -845,7 +851,7 @@ def show_signin_view(
     major_login_providers = util.get_enabled_major_login_providers()
     minor_login_providers = util.get_enabled_minor_login_providers()
 
-    #determine if we are only using password login
+    # determine if we are only using password login
     active_provider_names = [p['name'] for p in major_login_providers.values()]
     active_provider_names.extend([p['name'] for p in minor_login_providers.values()])
 
@@ -863,22 +869,23 @@ def show_signin_view(
     if request.user.is_authenticated():
         data['existing_login_methods'] = existing_login_methods
         active_provider_names = [
-                        item.provider_name for item in existing_login_methods
-                    ]
+            item.provider_name for item in existing_login_methods
+        ]
 
     util.set_login_provider_tooltips(
-                        major_login_providers,
-                        active_provider_names = active_provider_names
-                    )
+        major_login_providers,
+        active_provider_names=active_provider_names
+    )
     util.set_login_provider_tooltips(
-                        minor_login_providers,
-                        active_provider_names = active_provider_names
-                    )
+        minor_login_providers,
+        active_provider_names=active_provider_names
+    )
 
     data['major_login_providers'] = major_login_providers.values()
     data['minor_login_providers'] = minor_login_providers.values()
 
     return render(request, template_name, data)
+
 
 @csrf.csrf_protect
 @askbot_decorators.post_only
@@ -894,6 +901,7 @@ def change_password(request):
         data['errors'] = form.errors
     return HttpResponse(simplejson.dumps(data), content_type='application/json')
 
+
 @login_required
 def delete_login_method(request):
     if askbot_settings.ALLOW_ADD_REMOVE_LOGIN_METHODS == False:
@@ -902,30 +910,31 @@ def delete_login_method(request):
         provider_name = request.POST['provider_name']
         try:
             login_method = UserAssociation.objects.get(
-                                                user = request.user,
-                                                provider_name = provider_name
-                                            )
+                user=request.user,
+                provider_name=provider_name
+            )
             login_method.delete()
             return HttpResponse('', content_type='application/json')
         except UserAssociation.DoesNotExist:
-            #error response
+            # error response
             message = _('Login method %(provider_name)s does not exist')
             return HttpResponse(message, status=500, content_type='application/json')
         except UserAssociation.MultipleObjectsReturned:
             logging.critical(
-                    'have multiple %(provider)s logins for user %(id)s'
-                ) % {'provider':provider_name, 'id': request.user.id}
+                'have multiple %(provider)s logins for user %(id)s'
+            ) % {'provider': provider_name, 'id': request.user.id}
             message = _('Oops, sorry - there was some error - please try again')
             return HttpResponse(message, status=500, content_type='application/json')
     else:
         raise Http404
+
 
 def complete_openid_signin(request):
     """ in case of complete signin with openid """
     logging.debug('in askbot.deps.django_authopenid.complete')
     consumer = Consumer(request.session, util.DjangoOpenIDStore())
     # make sure params are encoded in utf8
-    params = dict((k,smart_unicode(v)) for k, v in request.GET.items())
+    params = dict((k, smart_unicode(v)) for k, v in request.GET.items())
     return_to = get_url_host(request) + reverse('user_complete_openid_signin')
     openid_response = consumer.complete(params, return_to)
 
@@ -934,10 +943,10 @@ def complete_openid_signin(request):
     if openid_response.status == SUCCESS:
         logging.debug('openid response status is SUCCESS')
         return signin_success(
-                    request,
-                    openid_response.identity_url,
-                    openid_response
-                )
+            request,
+            openid_response.identity_url,
+            openid_response
+        )
 
     elif openid_response.status == CANCEL:
         logging.debug('CANCEL')
@@ -966,7 +975,7 @@ def signin_success(request, identity_url, openid_response):
     """
 
     logging.debug('')
-    openid_data = util.from_openid_response(openid_response) #create janrain OpenID object
+    openid_data = util.from_openid_response(openid_response)  # create janrain OpenID object
     request.session['openid'] = openid_data
 
     openid_url = str(openid_data)
@@ -975,10 +984,10 @@ def signin_success(request, identity_url, openid_response):
         provider_name = util.get_provider_name(openid_url)
 
     user = authenticate(
-                    method='identifier',
-                    user_identifier=openid_url,
-                    provider_name=provider_name
-                )
+        method='identifier',
+        user_identifier=openid_url,
+        provider_name=provider_name
+    )
 
     next_url = get_next_url(request)
 
@@ -986,20 +995,21 @@ def signin_success(request, identity_url, openid_response):
     request.session['username'] = openid_data.sreg.get('nickname', '')
 
     return finalize_generic_signin(
-                        request=request,
-                        user=user,
-                        user_identifier=openid_url,
-                        login_provider_name=provider_name,
-                        redirect_url=next_url
-                    )
+        request=request,
+        user=user,
+        user_identifier=openid_url,
+        login_provider_name=provider_name,
+        redirect_url=next_url
+    )
+
 
 def finalize_generic_signin(
-                    request=None,
-                    user=None,
-                    login_provider_name=None,
-                    user_identifier=None,
-                    redirect_url=None
-                ):
+    request=None,
+    user=None,
+    login_provider_name=None,
+    user_identifier=None,
+    redirect_url=None
+):
     """non-view function
     generic signin, run after all protocol-dependent details
     have been resolved
@@ -1012,16 +1022,16 @@ def finalize_generic_signin(
             redirect_url = reverse('questions')
 
     if request.user.is_authenticated():
-        #this branch is for adding a new association
+        # this branch is for adding a new association
         if user is None:
             try:
-                #see if currently logged in user has login with the given provider
+                # see if currently logged in user has login with the given provider
                 assoc = UserAssociation.objects.get(
-                                    user=request.user,
-                                    provider_name=login_provider_name
-                                )
+                    user=request.user,
+                    provider_name=login_provider_name
+                )
                 logging.info('switching account or open id changed???')
-                #did openid url change? or we are dealing with a brand new open id?
+                # did openid url change? or we are dealing with a brand new open id?
                 message = _(
                     'If you are trying to sign in to another account, '
                     'please sign out first. Otherwise, please report the incident '
@@ -1030,7 +1040,7 @@ def finalize_generic_signin(
                 request.user.message_set.create(message=message)
                 return HttpResponseRedirect(redirect_url)
             except UserAssociation.DoesNotExist:
-                #register new association
+                # register new association
                 UserAssociation(
                     user=request.user,
                     provider_name=login_provider_name,
@@ -1040,45 +1050,46 @@ def finalize_generic_signin(
                 return HttpResponseRedirect(redirect_url)
 
         elif user != request.user:
-            #prevent theft of account by another pre-existing user
+            # prevent theft of account by another pre-existing user
             logging.critical(
-                    'possible account theft attempt by %s,%d to %s %d' % \
-                    (
-                        request.user.username,
-                        request.user.id,
-                        user.username,
-                        user.id
-                    )
+                'possible account theft attempt by %s,%d to %s %d' % \
+                (
+                    request.user.username,
+                    request.user.id,
+                    user.username,
+                    user.id
                 )
-            logout(request)#log out current user
-            login(request, user)#login freshly authenticated user
+            )
+            logout(request)  # log out current user
+            login(request, user)  # login freshly authenticated user
             return HttpResponseRedirect(redirect_url)
         else:
-            #user just checks if another login still works
+            # user just checks if another login still works
             msg = _('Your %(provider)s login works fine') % \
-                    {'provider': login_provider_name}
-            request.user.message_set.create(message = msg)
+                  {'provider': login_provider_name}
+            request.user.message_set.create(message=msg)
             return HttpResponseRedirect(redirect_url)
     elif user:
-        #login branch
+        # login branch
         login(request, user)
         logging.debug('login success')
         return HttpResponseRedirect(redirect_url)
     else:
-        #need to register
-        request.method = 'GET'#this is not a good thing to do
-        #but necessary at the moment to reuse the register() method
+        # need to register
+        request.method = 'GET'  # this is not a good thing to do
+        # but necessary at the moment to reuse the register() method
         return register(
-                    request,
-                    login_provider_name=login_provider_name,
-                    user_identifier=user_identifier,
-                    redirect_url=redirect_url
-                )
+            request,
+            login_provider_name=login_provider_name,
+            user_identifier=user_identifier,
+            redirect_url=redirect_url
+        )
+
 
 @not_authenticated
 @csrf.csrf_protect
-def register(request, login_provider_name=None, 
-    user_identifier=None, redirect_url=None):
+def register(request, login_provider_name=None,
+             user_identifier=None, redirect_url=None):
     """
     this function is used via it's own url with request.method=POST
     or as a simple function call from "finalize_generic_signin"
@@ -1102,7 +1113,7 @@ def register(request, login_provider_name=None,
     username = request.session.get('username', '')
     email = request.session.get('email', '')
 
-    #1) handle "one-click registration"
+    # 1) handle "one-click registration"
     if registration_enabled and login_provider_name:
 
         def email_is_acceptable(email):
@@ -1110,8 +1121,8 @@ def register(request, login_provider_name=None,
 
             is_blank = (email == '')
             is_blank_and_ok = is_blank \
-                                and askbot_settings.BLANK_EMAIL_ALLOWED \
-                                and askbot_settings.REQUIRE_VALID_EMAIL_FOR == 'nothing'
+                              and askbot_settings.BLANK_EMAIL_ALLOWED \
+                              and askbot_settings.REQUIRE_VALID_EMAIL_FOR == 'nothing'
             if is_blank_and_ok:
                 return True
 
@@ -1128,45 +1139,45 @@ def register(request, login_provider_name=None,
                 return False
             return User.objects.filter(username__iexact=username).count() == 0
 
-        #new style login providers support one click registration
+        # new style login providers support one click registration
         providers = util.get_enabled_login_providers()
         provider_data = providers.get(login_provider_name)
         if provider_data and hasattr(provider_data, 'one_click_registration') and provider_data.one_click_registration:
             if username_is_acceptable(username) and email_is_acceptable(email):
-                #try auto-registration and redirect to the next_url
+                # try auto-registration and redirect to the next_url
                 user = create_authenticated_user_account(
-                            username=username,
-                            email=email,
-                            user_identifier=user_identifier,
-                            login_provider_name=login_provider_name,
-                            request=request
-                        )
+                    username=username,
+                    email=email,
+                    user_identifier=user_identifier,
+                    login_provider_name=login_provider_name,
+                    request=request
+                )
                 login(request, user)
                 cleanup_post_register_session(request)
                 return HttpResponseRedirect(next_url)
-        #end of one-click registration
+        # end of one-click registration
 
     user = None
     logging.debug('request method is %s' % request.method)
 
     form_class = forms.get_federated_registration_form_class()
     register_form = form_class(
-                request=request,
-                initial={
-                    'next': next_url,
-                    'username': request.session.get('username', ''),
-                    'email': request.session.get('email', ''),
-                }
-            )
+        request=request,
+        initial={
+            'next': next_url,
+            'username': request.session.get('username', ''),
+            'email': request.session.get('email', ''),
+        }
+    )
 
     if (not registration_enabled) or request.method == 'GET':
         try:
-            assert(login_provider_name is not None)
-            assert(user_identifier is not None)
+            assert (login_provider_name is not None)
+            assert (user_identifier is not None)
         except AssertionError:
             return HttpResponseRedirect(reverse('user_signin'))
-        #store this data into the session
-        #to persist for the post request
+        # store this data into the session
+        # to persist for the post request
         request.session['login_provider_name'] = login_provider_name
         request.session['user_identifier'] = user_identifier
 
@@ -1177,7 +1188,7 @@ def register(request, login_provider_name=None,
             logging.critical('illegal attempt to register')
             return HttpResponseRedirect(reverse('user_signin'))
 
-        #load this data from the session
+        # load this data from the session
         user_identifier = request.session['user_identifier']
         login_provider_name = request.session['login_provider_name']
 
@@ -1192,8 +1203,8 @@ def register(request, login_provider_name=None,
 
             if 'ldap_user_info' in request.session:
                 user_info = request.session['ldap_user_info']
-                #we take this info from the user input where
-                #they can override the default provided by LDAP
+                # we take this info from the user input where
+                # they can override the default provided by LDAP
                 user_info['django_username'] = username
                 user_info['email'] = email
                 user = ldap_create_user(user_info).user
@@ -1206,12 +1217,12 @@ def register(request, login_provider_name=None,
             elif askbot_settings.REQUIRE_VALID_EMAIL_FOR == 'nothing':
 
                 user = create_authenticated_user_account(
-                            username=username,
-                            email=email,
-                            user_identifier=user_identifier,
-                            login_provider_name=login_provider_name,
-                            request=request
-                        )
+                    username=username,
+                    email=email,
+                    user_identifier=user_identifier,
+                    login_provider_name=login_provider_name,
+                    request=request
+                )
                 login(request, user)
                 cleanup_post_register_session(request)
                 return HttpResponseRedirect(next_url)
@@ -1227,12 +1238,12 @@ def register(request, login_provider_name=None,
                 return HttpResponseRedirect(redirect_url)
 
     providers = {
-            'yahoo':'<font color="purple">Yahoo!</font>',
-            'flickr':'<font color="#0063dc">flick</font><font color="#ff0084">r</font>&trade;',
-            'google':'Google&trade;',
-            'aol':'<font color="#31658e">AOL</font>',
-            'myopenid':'MyOpenID',
-        }
+        'yahoo': '<font color="purple">Yahoo!</font>',
+        'flickr': '<font color="#0063dc">flick</font><font color="#ff0084">r</font>&trade;',
+        'google': 'Google&trade;',
+        'aol': '<font color="#31658e">AOL</font>',
+        'myopenid': 'MyOpenID',
+    }
     if login_provider_name not in providers:
         provider_logo = login_provider_name
     else:
@@ -1246,17 +1257,19 @@ def register(request, login_provider_name=None,
         'provider': mark_safe(provider_logo),
         'username': username,
         'email': email,
-        'login_type':'openid',
-        'gravatar_faq_url':reverse('faq') + '#gravatar',
+        'login_type': 'openid',
+        'gravatar_faq_url': reverse('faq') + '#gravatar',
     }
     return render(request, 'authopenid/complete.html', data)
+
 
 def signin_failure(request, message):
     """
     falure with openid signin. Go back to signin page.
     """
-    request.user.message_set.create(message = message)
+    request.user.message_set.create(message=message)
     return show_signin_view(request)
+
 
 @not_authenticated
 @csrf.csrf_protect
@@ -1270,12 +1283,12 @@ def verify_email_and_register(request):
     presented_code = request.REQUEST.get('validation_code', None)
     if presented_code:
         try:
-            #we get here with post if button is pushed
-            #or with "get" if emailed link is clicked
+            # we get here with post if button is pushed
+            # or with "get" if emailed link is clicked
             email_verifier = UserEmailVerifier.objects.get(key=presented_code)
-            #verifies that the code has not been used already
-            assert(email_verifier.verified == False)
-            assert(email_verifier.has_expired() == False)
+            # verifies that the code has not been used already
+            assert (email_verifier.verified == False)
+            assert (email_verifier.has_expired() == False)
 
             username = email_verifier.value['username']
             email = email_verifier.value['email']
@@ -1318,6 +1331,7 @@ def verify_email_and_register(request):
         data = {'page_class': 'validate-email-page'}
         return render(request, 'authopenid/verify_email.html', data)
 
+
 @not_authenticated
 @csrf.csrf_protect
 def signup_with_password(request):
@@ -1326,10 +1340,11 @@ def signup_with_password(request):
     """
 
     logging.debug(get_request_info(request))
-    login_form = forms.LoginForm(initial = {'next': get_next_url(request)})
-    #this is safe because second decorator cleans this field
+    login_form = forms.LoginForm(initial={'next': get_next_url(request)})
+    # this is safe because second decorator cleans this field
 
     RegisterForm = forms.get_password_registration_form_class()
+    post_invite_code = None
 
     logging.debug('request method was %s' % request.method)
     if request.method == 'POST':
@@ -1340,6 +1355,8 @@ def signup_with_password(request):
             password = form.cleaned_data['password1']
             email = form.cleaned_data['email']
 
+            post_invite_code = request.POST.get("invite_code")
+
             if askbot_settings.REQUIRE_VALID_EMAIL_FOR == 'nothing':
                 user = create_authenticated_user_account(
                     username=username,
@@ -1349,6 +1366,8 @@ def signup_with_password(request):
                 )
                 login(request, user)
                 cleanup_post_register_session(request)
+                if post_invite_code:
+                    Invite.assign_new_user_to_invite_actions(user, post_invite_code)
                 return HttpResponseRedirect(get_next_url(request))
             else:
                 email_verifier = UserEmailVerifier(key=generate_random_key())
@@ -1361,15 +1380,19 @@ def signup_with_password(request):
                     handler_url_name='verify_email_and_register'
                 )
                 redirect_url = reverse('verify_email_and_register') + \
-                                '?next=' + get_next_url(request)
+                               '?next=' + get_next_url(request)
                 return HttpResponseRedirect(redirect_url)
+        else:
+            post_invite_code = request.POST.get("invite_code")
     else:
-        #todo: here we have duplication of get_password_login_provider...
+        # todo: here we have duplication of get_password_login_provider...
+        print(request.GET.get("invite_code"))
         form = RegisterForm(initial={'next': get_next_url(request)}, request=request)
 
     major_login_providers = util.get_enabled_major_login_providers()
     minor_login_providers = util.get_enabled_minor_login_providers()
-
+    # print(dir(form))
+    # print(dir(form.fields))
     context_data = {
         'form': form,
         'page_class': 'openid-signin',
@@ -1377,11 +1400,21 @@ def signup_with_password(request):
         'minor_login_providers': minor_login_providers.values(),
         'login_form': login_form
     }
+
+    get_invite_code = request.GET.get("invite_code", None)
+
+    if get_invite_code:
+        context_data["invite_code"] = get_invite_code
+    if post_invite_code:
+        context_data["invite_code"] = post_invite_code
+
+    print("returning here still")
     return render(
         request,
         'authopenid/signup_with_password.html',
         context_data
     )
+
 
 @login_required
 def signout(request):
@@ -1401,6 +1434,7 @@ def signout(request):
     logging.debug('user logged out')
     return HttpResponseRedirect(get_next_url(request))
 
+
 XRDF_TEMPLATE = """<?xml version='1.0' encoding='UTF-8'?>
 <xrds:XRDS
    xmlns:xrds='xri://$xrds'
@@ -1414,16 +1448,19 @@ XRDF_TEMPLATE = """<?xml version='1.0' encoding='UTF-8'?>
  </XRD>
 </xrds:XRDS>"""
 
+
 def xrdf(request):
     url_host = get_url_host(request)
     return_to = "%s%s" % (url_host, reverse('user_complete_openid_signin'))
     return HttpResponse(XRDF_TEMPLATE % {'return_to': return_to})
+
 
 def set_new_email(user, new_email):
     if new_email != user.email:
         user.email = new_email
         user.email_isvalid = False
         user.save()
+
 
 def send_email_key(address, key, handler_url_name='user_account_recover'):
     """private function. sends email containing validation key
@@ -1433,13 +1470,14 @@ def send_email_key(address, key, handler_url_name='user_account_recover'):
         'handler_url_name': handler_url_name,
         'key': key
     })
-    email.send([address,])
+    email.send([address, ])
 
 
 def send_user_new_email_key(user):
     user.email_key = generate_random_key()
     user.save()
     send_email_key(user.email, user.email_key)
+
 
 def recover_account(request):
     """view similar to send_email_key, except
@@ -1459,18 +1497,18 @@ def recover_account(request):
             user = form.cleaned_data['user']
             send_user_new_email_key(user)
             message = _(
-                    'Please check your email and visit the enclosed link.'
-                )
+                'Please check your email and visit the enclosed link.'
+            )
             return show_signin_view(
-                            request,
-                            account_recovery_message = message,
-                            view_subtype = 'email_sent'
-                        )
+                request,
+                account_recovery_message=message,
+                view_subtype='email_sent'
+            )
         else:
             return show_signin_view(
-                            request,
-                            account_recovery_form = form
-                        )
+                request,
+                account_recovery_form=form
+            )
     else:
         key = request.GET.get('validation_code', None)
         if key is None:
@@ -1488,13 +1526,13 @@ def recover_account(request):
             from askbot.models import greet_new_user
             greet_new_user(user)
 
-            #need to show "sticky" signin view here
+            # need to show "sticky" signin view here
             request.session['in_recovery'] = True
             return show_signin_view(
-                                request,
-                                view_subtype='add_openid',
-                                sticky=True
-                            )
+                request,
+                view_subtype='add_openid',
+                sticky=True
+            )
         else:
             data = {
                 'account_recovery_form': forms.AccountRecoveryForm(),

@@ -585,7 +585,6 @@ class ThreadToGroup(models.Model):
 
 class Thread(models.Model):
     title = models.CharField(max_length=300)
-
     tags = models.ManyToManyField('Tag', related_name='threads')
     groups = models.ManyToManyField(Group, through=ThreadToGroup,
                                     related_name='group_threads')

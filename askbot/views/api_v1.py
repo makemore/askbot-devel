@@ -11,6 +11,11 @@ from askbot.search.state_manager import SearchState
 from askbot.utils.html import site_url
 from askbot.utils.functions import get_epoch_str
 from django.http import JsonResponse
+import json
+from askbot.models.actions import Action
+from askbot.models.question import Thread
+from askbot.models.invites import Invite
+from askbot.utils.html import site_url
 
 
 def get_action_count(request):
@@ -18,11 +23,47 @@ def get_action_count(request):
         return HttpResponse(request.user.actions.all().count())
     return HttpResponse(0)
 
+
 def get_action_list(request):
     if request.user.is_authenticated():
         data = list(request.user.actions.values())
         return JsonResponse(data, safe=False)
     return HttpResponse(0)
+
+
+def add_email_to_topic(request):
+    data = json.loads(request.body)
+    try:
+        post = models.Post.objects.filter(
+            post_type='question',
+            id=data["threadId"]
+        ).select_related('thread')[0]
+    except IndexError:
+        # Handle URL mapping - from old Q/A/C/ URLs to the new one
+        try:
+            post = models.Post.objects.filter(
+                post_type='question',
+                old_question_id=data["threadId"]
+            ).select_related('thread')[0]
+        except IndexError:
+            raise Http404
+
+    try:
+        user = User.objects.get(email=data['email'])
+    except User.DoesNotExist:
+        user = None
+
+    if user:
+        Action.create_topic_follow_action(post.thread, user=user)
+        return HttpResponse()
+
+    invite = Invite.create_invite(data['email'])
+    action = Action.create_topic_follow_action(post.thread, invite=invite)
+
+    from askbot.mail.messages import InviteUserEmail
+    email = InviteUserEmail({'user': user, "invite_url": site_url("/account/signup/?invite_code=" + invite.invite_code)})
+    email.send([invite.email, ])
+    return HttpResponse()
 
 
 def get_user_data(user):
@@ -42,6 +83,7 @@ def get_user_data(user):
         'silver': user.silver,
         'bronze': user.bronze,
     }
+
 
 def get_question_data(thread):
     """returns data dictionary for a given thread"""
@@ -70,6 +112,7 @@ def get_question_data(thread):
     }
     return datum
 
+
 def info(request):
     '''
        Returns general data about the forum
@@ -88,6 +131,7 @@ def info(request):
 
     json_string = simplejson.dumps(data)
     return HttpResponse(json_string, content_type='application/json')
+
 
 def user(request, user_id):
     '''
@@ -140,16 +184,16 @@ def users(request):
             user_objects = paginator.page(paginator.num_pages)
 
         user_list = []
-        #serializing to json
+        # serializing to json
         for user in user_objects:
             user_dict = get_user_data(user)
             user_list.append(dict.copy(user_dict))
 
         response_dict = {
-                    'pages': paginator.num_pages,
-                    'count': paginator.count,
-                    'users': user_list
-                }
+            'pages': paginator.num_pages,
+            'count': paginator.count,
+            'users': user_list
+        }
         json_string = simplejson.dumps(response_dict)
 
         return HttpResponse(json_string, content_type='application/json')
@@ -159,8 +203,8 @@ def question(request, question_id):
     '''
     Gets a single question
     '''
-    #we retrieve question by post id, b/c that's what is in the url,
-    #not thread id (currently)
+    # we retrieve question by post id, b/c that's what is in the url,
+    # not thread id (currently)
     post = get_object_or_404(
         models.Post, id=question_id,
         post_type='question', deleted=False
@@ -186,24 +230,24 @@ def questions(request):
         page = None
 
     search_state = SearchState(
-                scope=request.GET.get('scope', 'all'),
-                sort=request.GET.get('sort', 'activity-desc'),
-                query=request.GET.get('query', None),
-                tags=request.GET.get('tags', None),
-                author=author_id,
-                page=page,
-                user_logged_in=request.user.is_authenticated(),
-            )
+        scope=request.GET.get('scope', 'all'),
+        sort=request.GET.get('sort', 'activity-desc'),
+        query=request.GET.get('query', None),
+        tags=request.GET.get('tags', None),
+        author=author_id,
+        page=page,
+        user_logged_in=request.user.is_authenticated(),
+    )
 
     qs, meta_data = models.Thread.objects.run_advanced_search(
-                        request_user=request.user, search_state=search_state
-                    )
+        request_user=request.user, search_state=search_state
+    )
     if meta_data['non_existing_tags']:
         search_state = search_state.remove_tags(meta_data['non_existing_tags'])
 
-    #exludes the question from groups
-    #global_group = models.Group.objects.get_global_group()
-    #qs = qs.exclude(~Q(groups__id=global_group.id))
+    # exludes the question from groups
+    # global_group = models.Group.objects.get_global_group()
+    # qs = qs.exclude(~Q(groups__id=global_group.id))
 
     page_size = askbot_settings.DEFAULT_QUESTIONS_PAGE_SIZE
     paginator = Paginator(qs, page_size)
@@ -218,7 +262,7 @@ def questions(request):
 
     ajax_data = {
         'count': paginator.count,
-        'pages' : paginator.num_pages,
+        'pages': paginator.num_pages,
         'questions': question_list
     }
     response_data = simplejson.dumps(ajax_data)

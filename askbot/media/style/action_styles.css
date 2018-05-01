@@ -45,7 +45,9 @@
 
 .action-row-menu {
     display:none;
-    position: relative;
+    position: absolute;
+    right:-130px;
+    background-color:#222;
 }
 
 
@@ -63,4 +65,5 @@
 
 .actions-list > div {
     position:relative;
+    cursor:pointer;
 }

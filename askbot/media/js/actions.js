@@ -20,6 +20,11 @@ $(function () {
         closeActions();
     });
 
+    $(document.body).on('click', ".action-row-menu-handle", function () {
+        $(".action-row-menu").hide();
+        $(this).parent().find(".action-row-menu").show();
+    });
+
     $(document.body).on('mouseover', ".action-row", function () {
         $(this).find(".action-row-menu-handle").show();
     });
@@ -58,4 +63,33 @@ $(function () {
         $(this).parent().append(html);
         getAllActions();
     })
+
+
+    // Add user to topic stuff
+
+
+    var threadId = askbot['data']['questionId'];
+    $("#add-email-to-topic").keypress(function (e) {
+        if (e.which == 13) {
+            var val = $(this).val();
+            $(this).val("");
+
+            $.ajax({
+                url: "/api/v1/add-email-to-topic/",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({email: val, threadId: threadId}),
+                success: function (response) {
+                    console.log("ok");
+                },
+                error: function (error) {
+                    alert(error);
+                }
+            });
+
+            return false;    //<---- Add this line
+        }
+    });
+
+
 });

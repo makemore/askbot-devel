@@ -6,6 +6,7 @@
 {% endif %}
 <div class="box vote-buttons">
     <h2>{{ settings.WORDS_QUESTION_TOOLS|escape }}</h2>
+
     <button class="js-follow-question button large"
             data-is-on="{{ favorited|as_js_bool }}"
             data-off-prompt-text="{% trans %}Unfollow{% endtrans %}"
@@ -30,16 +31,21 @@
     {% for user in thread.followed_by.all() %}
         {{ user }}<br>
     {% endfor %}
-    <div class="notify-sidebar">
-        {% if settings.RSS_ENABLED %}
-            <p class="rss">
-                <a
-                    href="{% url 'individual_question_feed' question.id %}"
-                    title="{% trans %}subscribe to the rss feed{% endtrans %}"
-                >{% trans %}subscribe to rss feed{% endtrans %}</a>
-            </p>
-        {% endif %}
-    </div>
+    {#
+        <div class="notify-sidebar">
+            {% if settings.RSS_ENABLED %}
+                <p class="rss">
+                    <a
+                        href="{% url 'individual_question_feed' question.id %}"
+                        title="{% trans %}subscribe to the rss feed{% endtrans %}"
+                    >{% trans %}subscribe to rss feed{% endtrans %}</a>
+                </p>
+            {% endif %}
+        </div>
+    #}
+    <br>
+    <h3 style="text-align:center;">Add user to topic</h3>
+    <input type="text" id="add-email-to-topic" placeholder="Enter email">
 </div>
 
 <div class="clearfix"></div>
