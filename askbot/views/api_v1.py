@@ -10,11 +10,20 @@ from askbot.conf import settings as askbot_settings
 from askbot.search.state_manager import SearchState
 from askbot.utils.html import site_url
 from askbot.utils.functions import get_epoch_str
-
+from django.http import JsonResponse
 
 
 def get_action_count(request):
-    return HttpResponse(request.user.actions.all().count())
+    if request.user.is_authenticated():
+        return HttpResponse(request.user.actions.all().count())
+    return HttpResponse(0)
+
+def get_action_list(request):
+    if request.user.is_authenticated():
+        data = list(request.user.actions.values())
+        return JsonResponse(data, safe=False)
+    return HttpResponse(0)
+
 
 def get_user_data(user):
     """get common data about the user"""

@@ -2,7 +2,7 @@
 {%- if user.is_read_only() -%}
     {% trans %}read only access{% endtrans %}
 {%- else -%}
-    <a id="actions-button">actions: 5, </a>
+    <a id="actions-button">actions: <span class="action-count"></span>, </a>
     {%- if settings.KARMA_MODE != 'hidden' -%}
     <a
       class="user-micro-info reputation"
