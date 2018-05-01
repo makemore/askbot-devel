@@ -26,7 +26,7 @@ class Action(models.Model):
     @staticmethod
     def create_topic_follow_action(thread, **kwargs):
         action = Action()
-        action.text = "Follow the topic : \'" + thread.title
+        action.text = "Follow the Topic : " + thread.title
         action.link = site_url(thread.get_absolute_url())
         if "user" in kwargs:
             action.user = kwargs["user"]
