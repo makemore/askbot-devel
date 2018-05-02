@@ -117,7 +117,7 @@
     <script type="text/javascript" src="{{ '/js/searchbar/tag_search.js'|media }}"></script>
 {% endcompress %}
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated() %}
     <script type="text/javascript" src="{{ '/js/actions.js'|media }}"></script>
 {% endif %}
 
