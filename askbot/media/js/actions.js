@@ -14,6 +14,7 @@ $(function () {
             }
         });
     };
+
     get_todo_action_count();
 
     var closeActions = function () {

@@ -4,7 +4,8 @@
 #}
 <div id="no-javascript">
     <noscript class="noscript">
-        {% trans app_name = settings.APP_SHORT_NAME %}Please note: {{ app_name }} requires javascript to work properly, please enable javascript in your browser, <a href="{{ noscript_url }}">here is how</a>{% endtrans %}
+        {% trans app_name = settings.APP_SHORT_NAME %}Please note: {{ app_name }} requires javascript to work properly,
+            please enable javascript in your browser, <a href="{{ noscript_url }}">here is how</a>{% endtrans %}
     </noscript>
     <script type="text/javascript">
         //IE fix to hide the red margin
@@ -27,7 +28,7 @@
     {% endif %}
     askbot['urls']['apiGetQuestions'] = '{% url "api_get_questions" %}';
     askbot['urls']['ask'] = '{% url "ask" %}';
-	askbot['urls']['questions'] = '{% url "questions" %}';
+    askbot['urls']['questions'] = '{% url "questions" %}';
     askbot['settings']['groupsEnabled'] = {{ settings.GROUPS_ENABLED|as_js_bool }};
     askbot['settings']['static_url'] = '{{ settings.STATIC_URL }}';
     askbot['settings']['minSearchWordLength'] = {{ min_search_word_length }};
@@ -102,7 +103,7 @@
     <script type='text/javascript' src="{{ '/js/utils/autocompleter.js'|media }}"></script>
     <script type='text/javascript' src="{{ '/js/utils/lang_nav.js'|media }}"></script>
     <script type="text/javascript" src="{{ '/jslib/handlebars-v4.0.11.js'|media }}"></script>
-    <script type="text/javascript" src="{{ '/js/actions.js'|media }}"></script>
+
     <script type='text/javascript' src="{{ '/jslib/se_hilite.js'|media }}"></script>
     <script type='text/javascript' src="{{ '/jslib/json.js'|media }}"></script>
     <script type='text/javascript' src="{{ '/jslib/jquery-fieldselection.js'|media }}"></script>
@@ -115,10 +116,15 @@
     <script type="text/javascript" src="{{ '/js/searchbar/full_text_search.js'|media }}"></script>
     <script type="text/javascript" src="{{ '/js/searchbar/tag_search.js'|media }}"></script>
 {% endcompress %}
+
+{% if user.is_authenticated %}
+    <script type="text/javascript" src="{{ '/js/actions.js'|media }}"></script>
+{% endif %}
+
 <script type="text/javascript">
     /*<![CDATA[*/
     $('.mceStatusbar').remove();//a hack to remove the tinyMCE status bar
-    $(document).ready(function(){
+    $(document).ready(function () {
         // focus input on the search bar endcomment
         var activeTab = askbot['data']['activeTab'];
         if (inArray(activeTab, ['users', 'questions', 'tags', 'badges'])) {
@@ -166,7 +172,9 @@
         }
     });
     if (askbot['data']['haveFlashNotifications']) {
-        $('#validate_email_alert').click(function(){notify.close(true)})
+        $('#validate_email_alert').click(function () {
+            notify.close(true)
+        })
         notify.show();
     }
 
@@ -181,12 +189,12 @@
 {# stuff below should not be compressed #}
 {% if settings.ENABLE_MATHJAX %}
     {# we don't want to load mathjax just in case, only if it is really enabled #}
-    <script type='text/javascript' src="{{settings.MATHJAX_BASE_URL}}/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    <script type='text/javascript' src="{{ settings.MATHJAX_BASE_URL }}/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
         if (typeof MathJax != 'undefined') {
             MathJax.Hub.Config({
                 extensions: ["tex2jax.js"],
-                jax: ["input/TeX","output/HTML-CSS"],
-                tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+                jax: ["input/TeX", "output/HTML-CSS"],
+                tex2jax: {inlineMath: [["$", "$"], ["\\(", "\\)"]]}
             });
         } else {
             console.log('Could not load MathJax');
@@ -194,19 +202,20 @@
     </script>
 {% endif %}
 {% if settings.USE_CUSTOM_JS %}
-<script src="{% url "custom_js" %}?v={{ settings.MEDIA_RESOURCE_REVISION }}"
-    type="text/javascript"
-></script>
+    <script src="{% url "custom_js" %}?v={{ settings.MEDIA_RESOURCE_REVISION }}"
+            type="text/javascript"
+    ></script>
 {% endif %}
 {% if settings.GOOGLE_ANALYTICS_KEY %}
-<script type="text/javascript">
-    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-    try {
-    var pageTracker = _gat._getTracker('{{ settings.GOOGLE_ANALYTICS_KEY }}');
-    pageTracker._trackPageview();
-    } catch(err) {}
-</script>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+            var pageTracker = _gat._getTracker('{{ settings.GOOGLE_ANALYTICS_KEY }}');
+            pageTracker._trackPageview();
+        } catch (err) {
+        }
+    </script>
 {% endif %}
