@@ -24,6 +24,20 @@ class Action(models.Model):
     text = models.CharField(max_length=1024)
     link = models.CharField(max_length=1024)
 
+    def __unicode__(self):
+        if self.invite:
+            return "Invited " + self.invite.email + " to join " + self.text
+        else:
+            return self.get_string_for_int(self.state) + " : " + self.user.email + " : " + self.text
+
+    def get_string_for_int(self, state_int):
+        if state_int == Action.TODO:
+            return "Todo"
+        if state_int == Action.DONE:
+            return "Done"
+        if state_int == Action.IRRELEVANT:
+            return "Irrelevent"
+
     def change_state_via_string(self, state_string):
         if state_string == "todo":
             self.state = self.TODO
