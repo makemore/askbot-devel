@@ -51,7 +51,7 @@ $(function () {
                 response.forEach(function (action) {
                     var source = document.getElementById("actions-row-template").innerHTML;
                     var template = Handlebars.compile(source);
-                    var context = {text: action.text, id: action.id};
+                    var context = {text: action.text, id: action.id, link:action.link};
                     var html = template(context);
                     $(".actions-list").append(html);
                 });
