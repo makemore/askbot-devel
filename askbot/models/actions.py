@@ -4,17 +4,19 @@ from django.contrib.auth.models import User
 from askbot.utils.html import site_url
 
 class Action(models.Model):
-    UNVIEWED = 0
-    VIEWED = 1
+    TODO = 0
+    DONE = 1
+    IRRELEVANT = 2
 
     STATE_CHOICES = (
-        (UNVIEWED, 'Unviewed'),
-        (VIEWED, 'Viewed'),
+        (TODO, 'Todo'),
+        (DONE, 'Done'),
+        (IRRELEVANT, 'Irrelevant'),
     )
 
     state = models.IntegerField(
         choices=STATE_CHOICES,
-        default=UNVIEWED,
+        default=TODO,
     )
 
     invite = models.ForeignKey(Invite, null=True, blank=True, related_name="actions")
@@ -22,6 +24,23 @@ class Action(models.Model):
     text = models.CharField(max_length=1024)
     link = models.CharField(max_length=1024)
 
+    def change_state_via_string(self, state_string):
+        if state_string == "todo":
+            self.state = self.TODO
+        if state_string == "done":
+            self.state = self.DONE
+        if state_string == "irrelevant":
+            self.state = self.IRRELEVANT
+        self.save()
+
+    @staticmethod
+    def get_int_for_state_string(state_string):
+        if state_string == "todo":
+            return Action.TODO
+        if state_string == "done":
+            return Action.DONE
+        if state_string == "irrelevant":
+            return Action.IRRELEVANT
 
     @staticmethod
     def create_topic_follow_action(thread, **kwargs):

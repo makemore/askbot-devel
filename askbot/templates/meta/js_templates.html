@@ -1,11 +1,12 @@
 {% raw %}
 
 <script id="actions-row-template" type="text/x-handlebars-template">
-    <div class="action-row">
+    <div class="action-row" data-id="{{ id }}">
         {{ text }}
         <div class="action-row-menu">
-            <div>Mark as Done</div>
-            <div>Mark as Irrelevant</div>
+            <div id="action-mark-as-done">Mark as Done</div>
+            <div id="action-mark-as-irrelevant">Mark as Irrelevant</div>
+            <div id="action-mark-as-todo">Mark as Todo</div>
         </div>
         <div class="action-row-menu-handle">
         </div>
@@ -16,10 +17,10 @@
     <div class="actions-container">
         <div class="actions-close">X</div>
         <div class="actions-filters">
-            <div id="action-filter-all">Todo</div>
-            <div id="action-filter-all">Done</div>
+            <div id="action-filter-todo">Todo</div>
+            <div id="action-filter-done">Done</div>
             <div id="action-filter-all">All</div>
-            <div id="action-filter-all">Irrelevant</div>
+            <div id="action-filter-irrelevant">Irrelevant</div>
         </div>
         <div class="actions-list">
 

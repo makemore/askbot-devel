@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseNotAllowed
 from django.contrib.auth.models import User
 import simplejson
 from django.db.models import Q
@@ -20,15 +20,29 @@ from askbot.utils.html import site_url
 
 def get_action_count(request):
     if request.user.is_authenticated():
-        return HttpResponse(request.user.actions.all().count())
+        return HttpResponse(request.user.actions.filter(state=Action.get_int_for_state_string("todo")).count())
     return HttpResponse(0)
 
 
 def get_action_list(request):
     if request.user.is_authenticated():
-        data = list(request.user.actions.values())
+        state = request.GET.get("state", None)
+
+        if state == None or state == "all":
+            data = list(request.user.actions.values())
+        else:
+            data = list(request.user.actions.filter(state=Action.get_int_for_state_string(state)).values())
         return JsonResponse(data, safe=False)
     return HttpResponse(0)
+
+
+def change_action_state(request):
+    if request.user.is_authenticated():
+        data = json.loads(request.body)
+        action = Action.objects.get(pk=data["actionId"])
+        action.change_state_via_string(data["state"])
+        return HttpResponse()
+    return HttpResponseNotAllowed()
 
 
 def add_email_to_topic(request):
