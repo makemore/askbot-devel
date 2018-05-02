@@ -156,6 +156,32 @@ class BaseEmail(object):
             )
 
 
+class ActionEmail(BaseEmail):
+    template_path = 'email/action'
+    title = 'Action assigned to you on clearspace'
+    description = 'Action assigned to you on clearspace'
+    preview_error_message = _(
+        'At least one user is required generate a preview'
+    )
+
+    def is_enabled(self):
+        return askbot_settings.ENABLE_EMAIL_ALERTS \
+            and askbot_settings.WELCOME_EMAIL_ENABLED
+
+
+    def get_mock_context(self):
+        return {
+            'user': get_user(),
+            'site_name': askbot_settings.APP_SHORT_NAME or 'our community'
+        }
+
+    def process_context(self, context):
+        context['recipient_user'] = context['user']
+        context['site_name'] = askbot_settings.APP_SHORT_NAME
+        return context
+
+
+
 class InviteUserEmail(BaseEmail):
     template_path = 'email/invite'
     title = 'Invited to clearspace'

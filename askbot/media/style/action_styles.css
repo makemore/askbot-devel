@@ -66,4 +66,9 @@
 .actions-list > div {
     position: relative;
     cursor: pointer;
+    white-space:normal;
+    width:250px;
+    padding-bottom:10px;
+    padding-top:10px;
+    border-bottom:1px solid white;
 }

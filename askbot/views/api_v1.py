@@ -68,7 +68,14 @@ def add_email_to_topic(request):
         user = None
 
     if user:
-        Action.create_topic_follow_action(post.thread, user=user)
+        action = Action.create_topic_follow_action(post.thread, user=user)
+        from askbot.mail.messages import ActionEmail
+        email = ActionEmail({
+            'action_text': action.text,
+            'user': user,
+            "link": action.link
+        })
+        email.send([user.email, ])
         return HttpResponse()
 
     invite = Invite.create_invite(data['email'])
