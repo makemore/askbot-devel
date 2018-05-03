@@ -103,9 +103,6 @@
     <script type='text/javascript' src="{{ '/js/utils/autocompleter.js'|media }}"></script>
     <script type='text/javascript' src="{{ '/js/utils/lang_nav.js'|media }}"></script>
     <script type="text/javascript" src="{{ '/jslib/handlebars-v4.0.11.js'|media }}"></script>
-    {% if user.is_authenticated() %}
-        <script type="text/javascript" src="{{ '/js/actions.js'|media }}"></script>
-    {% endif %}
     <script type='text/javascript' src="{{ '/jslib/se_hilite.js'|media }}"></script>
     <script type='text/javascript' src="{{ '/jslib/json.js'|media }}"></script>
     <script type='text/javascript' src="{{ '/jslib/jquery-fieldselection.js'|media }}"></script>
@@ -118,6 +115,12 @@
     <script type="text/javascript" src="{{ '/js/searchbar/full_text_search.js'|media }}"></script>
     <script type="text/javascript" src="{{ '/js/searchbar/tag_search.js'|media }}"></script>
 {% endcompress %}
+
+{% if user.is_authenticated() %}
+    {% compress js %}
+        <script type="text/javascript" src="{{ '/js/actions.js'|media }}"></script>
+    {% endcompress %}
+{% endif %}
 
 
 

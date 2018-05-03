@@ -1,3 +1,8 @@
+#emoji-feedback-widget .emoji-feedback {
+    bottom:50px !important;
+    right:50px !important;
+}
+
 .actions-container {
     background-color: #333;
     height: 400px;
