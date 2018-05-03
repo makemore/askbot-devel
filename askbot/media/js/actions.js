@@ -1,5 +1,38 @@
 $(function () {
 
+    // using jQuery
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+
     var get_todo_action_count = function () {
         $.ajax({
             url: "/api/v1/get-action-count/",
@@ -51,7 +84,7 @@ $(function () {
                 response.forEach(function (action) {
                     var source = document.getElementById("actions-row-template").innerHTML;
                     var template = Handlebars.compile(source);
-                    var context = {text: action.text, id: action.id, link:action.link};
+                    var context = {text: action.text, id: action.id, link: action.link};
                     var html = template(context);
                     $(".actions-list").append(html);
                 });
