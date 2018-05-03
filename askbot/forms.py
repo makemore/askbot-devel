@@ -469,9 +469,9 @@ class TagNamesField(forms.CharField):
                             'Please shorten or delete some of them.')
         self.label = kwargs.get('label') or _('tags')
         self.help_text = kwargs.get('help_text') or ungettext_lazy(
-            'Tags are short keywords, with no spaces within. '
+            'Tags are short keywords, with no spaces within. For example "regulatory test mandate" (without quotes) would add 3 keywords. '
             'Up to %(max_tags)d tag can be used.',
-            'Tags are short keywords, with no spaces within. '
+            'Tags are short keywords, with no spaces within. For example "regulatory test mandate" (without quotes) would add 3 keywords. '
             'Up to %(max_tags)d tags can be used.',
             askbot_settings.MAX_TAGS_PER_POST
         ) % {'max_tags': askbot_settings.MAX_TAGS_PER_POST}
