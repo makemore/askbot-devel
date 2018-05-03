@@ -1,3 +1,17 @@
+a.create-password-account {
+    background-color:#d2e2e5;
+    height:27px !important;
+    line-height: 27px;
+    display:inline-block;
+    padding-left:20px;
+    padding-right:5px;
+    color:#4b757e;
+    border-radius: 5px;
+    margin-top:3px;
+    font-weight: 800;
+ box-shadow: 1px 1px #888888;
+}
+
 #emoji-feedback-widget .emoji-feedback {
     bottom:50px !important;
     right:50px !important;
