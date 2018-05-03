@@ -434,7 +434,7 @@ def get_enabled_major_login_providers():
             'display_name': site_name,
             'extra_token_name': prompt,
             'type': 'password',
-            'create_password_prompt': _('Create a password-protected account'),
+            'create_password_prompt': _('Sign up'),
             'change_password_prompt': _('Change your password'),
             'icon_media_path': askbot_settings.LOCAL_LOGIN_ICON,
             'password_changeable': True
@@ -1069,7 +1069,7 @@ def get_oauth2_starter_url(provider_name, csrf_token):
         client_id=client_id,
         redirect_uri=redirect_uri
     )
-    
+
     return client.auth_uri(state=csrf_token, **params.get('extra_auth_params', {}))
 
 
