@@ -176,26 +176,29 @@ $(function () {
 
 
     var threadId = askbot['data']['questionId'];
-    $("#add-email-to-topic").keypress(function (e) {
-        if (e.which == 13) {
-            var val = $(this).val();
-            $(this).val("");
 
-            $.ajax({
-                url: "/api/v1/add-email-to-topic/",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({email: val, threadId: threadId}),
-                success: function (response) {
-                    console.log("ok");
-                },
-                error: function (error) {
-                    alert(error);
-                }
-            });
+    $("#add-email-to-topic-form").on("submit", function (e) {
+        e.preventDefault();
+        alert();
+        var val = $(this).find("#add-email-to-topic").val();
+        $(this).find("#add-email-to-topic").val("");
+        $.ajax({
+            url: "/api/v1/add-email-to-topic/",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({email: val, threadId: threadId}),
+            success: function (response) {
+                console.log("ok");
+                var el = $("<div style='color:#4a757f;'>Email added</div>").appendTo($("#add-email-to-topic-form"));
+                el.delay(3000).fadeOut(1000);
+            },
+            error: function (error) {
+                alert(error);
+            }
+        });
 
-            return false;    //<---- Add this line
-        }
+        return false;    //<---- Add this line
+
     });
 
 
