@@ -42,8 +42,8 @@ $(function () {
             success: function (response) {
                 $(".action-count").text(response);
             },
-            error: function (error) {
-                alert(error);
+            error: function (error, textStatus) {
+                alert(textStatus);
             }
         });
     };
@@ -89,8 +89,8 @@ $(function () {
                     $(".actions-list").append(html);
                 });
             },
-            error: function (error) {
-                alert(error);
+            error: function (error, textStatus) {
+                alert(textStatus);
             }
         })
     };
@@ -133,8 +133,8 @@ $(function () {
                 getActions(currentFilter);
                 get_todo_action_count();
             },
-            error: function (error) {
-                alert(error);
+            error: function (error, textStatus) {
+                alert(textStatus);
             }
         });
     });
@@ -149,8 +149,8 @@ $(function () {
                 getActions(currentFilter);
                 get_todo_action_count();
             },
-            error: function (error) {
-                alert(error);
+            error: function (error, textStatus) {
+                alert(textStatus);
             }
         });
     });
@@ -165,8 +165,8 @@ $(function () {
                 getActions(currentFilter);
                 get_todo_action_count();
             },
-            error: function (error) {
-                alert(error);
+            error: function (error, textStatus) {
+                alert(textStatus);
             }
         });
     });
@@ -179,7 +179,6 @@ $(function () {
 
     $("#add-email-to-topic-form").on("submit", function (e) {
         e.preventDefault();
-        alert();
         var val = $(this).find("#add-email-to-topic").val();
         $(this).find("#add-email-to-topic").val("");
         $.ajax({
@@ -192,8 +191,8 @@ $(function () {
                 var el = $("<div style='color:#4a757f;'>Email added</div>").appendTo($("#add-email-to-topic-form"));
                 el.delay(3000).fadeOut(1000);
             },
-            error: function (error) {
-                alert(error);
+            error: function (error, textStatus) {
+                alert(textStatus);
             }
         });
 
