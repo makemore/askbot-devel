@@ -198,7 +198,6 @@ $(function () {
         });
 
         return false;    //<---- Add this line
-
     });
 
 

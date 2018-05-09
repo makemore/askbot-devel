@@ -18,6 +18,19 @@ from askbot.models.invites import Invite
 from askbot.utils.html import site_url
 
 
+def get_usernames_for_emails(request):
+    if request.user.is_authenticated():
+        response = []
+        data = json.loads(request.body)
+        for email in data:
+            try:
+                response.append(User.objects.get(email=email[1:]).username)
+            except User.DoesNotExist:
+                response.append(None)
+        return JsonResponse(response, safe=False)
+    return HttpResponse()
+
+
 def get_action_count(request):
     if request.user.is_authenticated():
         return HttpResponse(request.user.actions.filter(state=Action.get_int_for_state_string("todo")).count())
@@ -27,7 +40,6 @@ def get_action_count(request):
 def get_action_list(request):
     if request.user.is_authenticated():
         state = request.GET.get("state", None)
-
         if state == None or state == "all":
             data = list(request.user.actions.values())
         else:

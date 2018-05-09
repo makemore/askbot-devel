@@ -148,7 +148,7 @@ askbot.validators.questionDetailsValidator = function (text) {
     text = $.trim(text);
     var minLength = askbot.settings.minQuestionBodyLength;
     if (minLength && (text.length < minLength)) {
-        /* todo - for tinymce text extract text from html 
+        /* todo - for tinymce text extract text from html
             otherwise html tags will be counted and user misled */
         throw interpolate(
                     ngettext(
@@ -1944,6 +1944,7 @@ WMD.prototype.getEditorElement = function () {
 };
 
 WMD.prototype.createDom = function () {
+
     this._element = this.makeElement('div');
     var clearfix = this.makeElement('div').addClass('clearfix');
     this._element.append(clearfix);
@@ -2681,6 +2682,7 @@ Comment.prototype.decorate = function (element) {
         this._edit_link = new EditLink();
         this._edit_link.setHandler(this.getEditHandler());
         this._edit_link.decorate(edit_link);
+
     }
 
     var convert_link = this._element.find('.convert-comment');

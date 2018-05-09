@@ -701,6 +701,7 @@ urlpatterns = patterns(
     url('^api/v1/get-action-list/$', views.api_v1.get_action_list, name='api_v1_get_action_list'),
     url('^api/v1/change-action-state/$', views.api_v1.change_action_state, name='api_v1_change_action_state'),
     url('^api/v1/add-email-to-topic/$', views.api_v1.add_email_to_topic, name='api_v1_add_email_to_topic'),
+    url('^api/v1/get-usernames-for-emails/$', views.api_v1.get_usernames_for_emails, name='api_v1_get_usernames_for_emails'),
     url('^api/v1/users/(?P<user_id>\d+)/$', views.api_v1.user, name='api_v1_user'),
     url('^api/v1/questions/$', views.api_v1.questions, name='api_v1_questions'),
     url('^api/v1/questions/(?P<question_id>\d+)/$', views.api_v1.question, name='api_v1_question'),

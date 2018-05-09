@@ -1,9 +1,38 @@
+
+
+The software is run via a main python project, with a custom package being run locally.
+
+The folder to run software like this on linux can be /opt/ (optional)
+
+There are two zip files:
+
+clearspace-phase2.zip
+askbot-devel-master.zip
+
+Unzip both of these into
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ====================================
 Askbot - a Django Q&A forum platform
 ====================================
 
 This is Askbot project - open source Q&A system, like StackOverflow, Yahoo Answers and some others.
-Askbot is based on code of CNPROG, originally created by Mike Chen 
+Askbot is based on code of CNPROG, originally created by Mike Chen
 and Sailing Cai and some code written for OSQA.
 
 Demos and hosting are available at http://askbot.com.

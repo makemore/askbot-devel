@@ -4,7 +4,7 @@
  * of a database object. Whether editing is
  * permissible is to be enforced in the backend
  */
-var Editable = function(){
+var Editable = function () {
     WrappedElement.call(this);
     this._state = 'display';//'edit' or 'display'
     this._isEditorLoaded = false;
@@ -13,22 +13,22 @@ var Editable = function(){
 };
 inherits(Editable, WrappedElement);
 
-Editable.prototype.backupContent = function(){
+Editable.prototype.backupContent = function () {
     this._contentBackup = this._contentBox.contents();
 };
 
-Editable.prototype.setEnabledEditorButtons = function(buttons){
+Editable.prototype.setEnabledEditorButtons = function (buttons) {
     this._enabledEditorButtons = buttons;
 };
 
-Editable.prototype.setPreviewerEnabled = function(state){
+Editable.prototype.setPreviewerEnabled = function (state) {
     this._isPreviewerEnabled = state;
-    if (this.isEditorLoaded()){
+    if (this.isEditorLoaded()) {
         this._editor.setPreviewerEnabled(state);
     }
 };
 
-Editable.prototype.setContent = function(content){
+Editable.prototype.setContent = function (content) {
     this._content.empty();
     this._content.append(content);
     if (askbot.settings.mathjaxEnabled) {
@@ -36,8 +36,8 @@ Editable.prototype.setContent = function(content){
     }
 };
 
-Editable.prototype.setState = function(state){
-    if (state === 'edit'){
+Editable.prototype.setState = function (state) {
+    if (state === 'edit') {
         this._state = state;
         this._editorBox.show();
         this._editBtn.hide();
@@ -45,7 +45,7 @@ Editable.prototype.setState = function(state){
         this._cancelBtn.show();
         this._hideables.hide();
         this._content.hide();
-    } else if (state === 'display'){
+    } else if (state === 'display') {
         this._editorBox.hide();
         this._saveBtn.hide();
         this._cancelBtn.hide();
@@ -55,34 +55,34 @@ Editable.prototype.setState = function(state){
     }
 };
 
-Editable.prototype.restoreContent = function(){
+Editable.prototype.restoreContent = function () {
     var content_box = this._contentBox;
     content_box.empty();
-    $.each(this._contentBackup, function(idx, element){
+    $.each(this._contentBackup, function (idx, element) {
         content_box.append(element);
     });
 };
 
-Editable.prototype.isEditorLoaded = function(){
+Editable.prototype.isEditorLoaded = function () {
     return this._isEditorLoaded;
 };
 
-Editable.prototype.setEditorLoaded = function(){
+Editable.prototype.setEditorLoaded = function () {
     return this._isEditorLoaded = true;
 };
 
-Editable.prototype.getObjectId = function() {
+Editable.prototype.getObjectId = function () {
     return this._objectId;
 };
 
-Editable.prototype.getAttributeName = function() {
+Editable.prototype.getAttributeName = function () {
     return this._attributeName;
 };
 
 Editable.prototype.startEditingText = function (text) {
     var ed = this._editor;
     this.setState('edit');
-    if (this.isEditorLoaded() === false){
+    if (this.isEditorLoaded() === false) {
         ed.start();
         this.setEditorLoaded();
     }
@@ -114,7 +114,7 @@ Editable.prototype.startActivatingEditor = function (evt) {
         url: this._getTextUrl,
         data: this._getTextUrlParams,
         cache: false,
-        success: function(data){
+        success: function (data) {
             me.startEditingText(data[paramName]);
         }
     });
@@ -136,101 +136,138 @@ Editable.prototype.cancelEdit = function () {
 
 Editable.prototype.saveText = function () {
     var me = this;
+
     var editorText = this._editor.getText();
 
-    if (this._editorType == 'tinymce') {
-        editorText = stripTags(editorText);
-    }
+    console.log(editorText);
 
-    if (this._validator) {
-        try {
-            this._validator(editorText);
-            this.clearError();
-        } catch (e) {
-            this.setError(e);
-            return;
-        }
-    }
+    var res = editorText.match(/@.+?(?=@)@.+?(?=.com).com/g);
 
-    //optimistic update
-    if (this._editorType === 'markdown') {
-        var converter = getAskbotMarkdownConverter();
-        editorText = converter.makeHtml(editorText);
-    }
-    this.setContent(editorText);
-    this.setState('display');
-    
-    var data = this._saveTextUrlParams;
-    editorText = this._editor.getText();
-    data[this._saveTextParamName] = editorText;
-    var validatedParamName = this._validatedTextParamName;
+    console.log(res);
+
+    var that = this;
 
     $.ajax({
-        type: 'POST',
-        dataType: 'json',
-        url: this._saveTextUrl,
-        data: data,
+        url: "/api/v1/get-usernames-for-emails/",
+        type: "POST",
         cache: false,
-        success: function(data){
-            if (data['success']){
-                me.setContent(data[validatedParamName]);
-            } else {
-                me.setState('edit');
-                showMessage(me.getElement(), data['message']);
+        dataType: "json",
+        data: JSON.stringify(res),
+        success: function (response) {
+
+
+
+            if (that._editorType == 'tinymce') {
+                editorText = stripTags(editorText);
             }
+
+            if (that._validator) {
+                try {
+                    that._validator(editorText);
+                    that.clearError();
+                } catch (e) {
+                    that.setError(e);
+                    return;
+                }
+            }
+
+            //optimistic update
+            if (that._editorType === 'markdown') {
+                var converter = getAskbotMarkdownConverter();
+                editorText = converter.makeHtml(editorText);
+            }
+            that.setContent(editorText);
+            that.setState('display');
+
+            var data = that._saveTextUrlParams;
+            editorText = that._editor.getText();
+
+
+            console.log(response);
+
+            res.forEach(function (email, index) {
+                if (response[index] != null) {
+                    editorText = editorText.replace(email, "@" + response[index])
+                }
+            });
+
+            console.log(editorText);
+
+            data[that._saveTextParamName] = editorText;
+            var validatedParamName = that._validatedTextParamName;
+
+
+            $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: that._saveTextUrl,
+                data: data,
+                cache: false,
+                success: function (data) {
+                    if (data['success']) {
+                        me.setContent(data[validatedParamName]);
+                    } else {
+                        me.setState('edit');
+                        showMessage(me.getElement(), data['message']);
+                    }
+                }
+            });
+        },
+        error: function (error) {
+            alert(error);
         }
     });
 };
 
-Editable.prototype.decorate = function(element){
-     /* expected markup
-        <div class="js-editable"
-            id="js-<something>" //here "something" must be unique enough
-            // 1. urls below are parsed and parameters added as part of request
-            //    this way url parameter input is more compact and comes with the 
-            //    corresponding url
-            // 2. the getTextUrl is optional - if absent, text will be taken as
-            //    displayed in the html. This feature won't work with the markdown editor
-            data-get-text-url="{% url user_get_description %}?user_id={{ view_user.pk }}"
-            data-save-text-url="{% url user_set_description %}?user_id={{ view_user.pk }}"
-            // this parameter will be added to the POST request made to saveTextUrl
-            data-save-text-param-name="description"
-            // this parameter is optional, used to retreive data from server after saving
-            // i.e. when saved data is first validated and perhaps parsed
-            //if absent, assumed value will be the same as saveTextParamName
-            data-validated-text-param-name="description_html"
-            // depending on the editor type we might ignore the getTextUrl
-            // as we need the access the url only in the case of markdown editor
-            data-editor-type="<one of supported editor types>"
-            data-editor-compact="true"//optional
-        >
-            //this item must be inside of js-editable
-            <div class="js-editable-content">some text which will be editable</div>
-            // the button as shown below does not have to be inside of js-editable.
-            // we find the button by the Id, which starts with js-edit-btn and 
-            // ends the same as id of the .js-editable
-            // Also, the html elements of button and the container are not important,
-            // only ids, class names and "data" parameters on the .js-editable
-            // the <something> in the id below must be the same as in the id of
-            // the .js-editable
-            <button id="js-edit-btn-<something>">{% trans %}edit{% endtrans %}</button>
-        </div>
-    */
+Editable.prototype.decorate = function (element) {
+    /* expected markup
+       <div class="js-editable"
+           id="js-<something>" //here "something" must be unique enough
+           // 1. urls below are parsed and parameters added as part of request
+           //    this way url parameter input is more compact and comes with the
+           //    corresponding url
+           // 2. the getTextUrl is optional - if absent, text will be taken as
+           //    displayed in the html. This feature won't work with the markdown editor
+           data-get-text-url="{% url user_get_description %}?user_id={{ view_user.pk }}"
+           data-save-text-url="{% url user_set_description %}?user_id={{ view_user.pk }}"
+           // this parameter will be added to the POST request made to saveTextUrl
+           data-save-text-param-name="description"
+           // this parameter is optional, used to retreive data from server after saving
+           // i.e. when saved data is first validated and perhaps parsed
+           //if absent, assumed value will be the same as saveTextParamName
+           data-validated-text-param-name="description_html"
+           // depending on the editor type we might ignore the getTextUrl
+           // as we need the access the url only in the case of markdown editor
+           data-editor-type="<one of supported editor types>"
+           data-editor-compact="true"//optional
+       >
+           //this item must be inside of js-editable
+           <div class="js-editable-content">some text which will be editable</div>
+           // the button as shown below does not have to be inside of js-editable.
+           // we find the button by the Id, which starts with js-edit-btn and
+           // ends the same as id of the .js-editable
+           // Also, the html elements of button and the container are not important,
+           // only ids, class names and "data" parameters on the .js-editable
+           // the <something> in the id below must be the same as in the id of
+           // the .js-editable
+           <button id="js-edit-btn-<something>">{% trans %}edit{% endtrans %}</button>
+       </div>
+   */
     var parsed, editor;
     this._element = element;
     //validate that id starts with "js-" and is longer than 3 chars
     var id = element.attr('id');
-    if ( !id || id.length <= 3 ) {
+    if (!id || id.length <= 3) {
         throw "id of .js-editable must have > 3 characters";
     }
-    if ( id.substr(0, 3) !== 'js-' ) {
+    if (id.substr(0, 3) !== 'js-') {
         throw "id of .js-editable must start with js-";
     }
     this._id = id.substr(3);
     this._content = element.find('.js-editable-content');
     //must be defined
     var editBtn = $(document.getElementById('js-edit-btn-' + this._id));
-    if ( !editBtn ) {
+    if (!editBtn) {
         throw "edit button with id js-edit-btn-" + this._id + " is required";
     }
     this._editBtn = editBtn;
@@ -253,6 +290,7 @@ Editable.prototype.decorate = function(element){
         this._getTextUrl = undefined;
         this._getTextUrlParams = undefined;
     }
+
 
     parsed = parseUrl(element.data('saveTextUrl'));
     this._saveTextUrl = parsed[0];
@@ -328,14 +366,20 @@ Editable.prototype.decorate = function(element){
     this.setState('display');
 
     var me = this;
-    setupButtonEventHandlers(editBtn, function(evt){ me.startActivatingEditor(evt) });
-    setupButtonEventHandlers(cancelBtn, function(){ me.cancelEdit() });
-    setupButtonEventHandlers(saveBtn, function(){ me.saveText() });
+    setupButtonEventHandlers(editBtn, function (evt) {
+        me.startActivatingEditor(evt);
+    });
+    setupButtonEventHandlers(cancelBtn, function () {
+        me.cancelEdit()
+    });
+    setupButtonEventHandlers(saveBtn, function () {
+        me.saveText()
+    });
 };
 
 (function () {
     var items = $('.js-editable');
-    $.each(items, function(idx, item) {
+    $.each(items, function (idx, item) {
         var editable = new Editable();
         editable.decorate($(item));
     });

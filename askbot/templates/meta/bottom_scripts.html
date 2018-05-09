@@ -119,6 +119,7 @@
 {% if user.is_authenticated() %}
     {% compress js %}
         <script type="text/javascript" src="{{ '/js/actions.js'|media }}"></script>
+        <script type="text/javascript" src="{{ '/js/editor_tag_email.js'|media }}"></script>
     {% endcompress %}
 {% endif %}
 
