@@ -31,7 +31,7 @@ function appendLoader(element) {
         loading +
         '" alt="' +
         loading +
-    '" />');
+        '" />');
 }
 
 function removeLoader() {
@@ -133,14 +133,14 @@ askbot.validators.titleValidator = function (text) {
     text = $.trim(text);
     if (text.length < askbot.settings.minTitleLength) {
         throw interpolate(
-                        ngettext(
-                            'enter > %(length)s character',
-                            'enter > %(length)s characters',
-                            askbot.settings.minTitleLength
-                        ),
-                        {'length': askbot.settings.minTitleLength},
-                        true
-                    );
+            ngettext(
+                'enter > %(length)s character',
+                'enter > %(length)s characters',
+                askbot.settings.minTitleLength
+            ),
+            {'length': askbot.settings.minTitleLength},
+            true
+        );
     }
 };
 
@@ -151,13 +151,13 @@ askbot.validators.questionDetailsValidator = function (text) {
         /* todo - for tinymce text extract text from html
             otherwise html tags will be counted and user misled */
         throw interpolate(
-                    ngettext(
-                        'details must have > %s character',
-                        'details must have > %s characters',
-                        minLength
-                    ),
-                    [minLength]
-                );
+            ngettext(
+                'details must have > %s character',
+                'details must have > %s characters',
+                minLength
+            ),
+            [minLength]
+        );
     }
 };
 
@@ -172,14 +172,14 @@ askbot.validators.answerValidator = function (text) {
     }
     if (minLength && (textLength < minLength)) {
         throw interpolate(
-                ngettext(
-                    'enter > %(length)s character',
-                    'enter > %(length)s characters',
-                    minLength
-                ),
-                {'length': minLength},
-                true
-            );
+            ngettext(
+                'enter > %(length)s character',
+                'enter > %(length)s characters',
+                minLength
+            ),
+            {'length': minLength},
+            true
+        );
     }
 };
 
@@ -214,25 +214,25 @@ var CPValidator = (function () {
                 text: {
                     required: ' ' + gettext('details are required'),
                     minlength: interpolate(
-                                    ngettext(
-                                        'details must have > %s character',
-                                        'details must have > %s characters',
-                                        askbot.settings.minQuestionBodyLength
-                                    ),
-                                    [askbot.settings.minQuestionBodyLength]
-                                )
+                        ngettext(
+                            'details must have > %s character',
+                            'details must have > %s characters',
+                            askbot.settings.minQuestionBodyLength
+                        ),
+                        [askbot.settings.minQuestionBodyLength]
+                    )
                 },
                 title: {
                     required: ' ' + gettext('enter your question'),
                     minlength: interpolate(
-                                    ngettext(
-                                        'enter > %(length)s character',
-                                        'enter > %(length)s characters',
-                                        askbot.settings.minTitleLength
-                                    ),
-                                    {'length': askbot.settings.minTitleLength},
-                                    true
-                                )
+                        ngettext(
+                            'enter > %(length)s character',
+                            'enter > %(length)s characters',
+                            askbot.settings.minTitleLength
+                        ),
+                        {'length': askbot.settings.minTitleLength},
+                        true
+                    )
                 }
             };
         },
@@ -249,14 +249,14 @@ var CPValidator = (function () {
                 text: {
                     required: ' ' + gettext('content cannot be empty'),
                     minlength: interpolate(
-                                    ngettext(
-                                        'enter > %(length)s character',
-                                        'enter > %(length)s characters',
-                                        askbot.settings.minAnswerBodyLength
-                                    ),
-                                    {'length': askbot.settings.minAnswerBodyLength},
-                                    true
-                                )
+                        ngettext(
+                            'enter > %(length)s character',
+                            'enter > %(length)s characters',
+                            askbot.settings.minAnswerBodyLength
+                        ),
+                        {'length': askbot.settings.minAnswerBodyLength},
+                        true
+                    )
                 }
             };
         }
@@ -310,7 +310,9 @@ ThreadUsersDialog.prototype.decorate = function (element) {
     dialog.setRejectButtonText('');
     dialog.setAcceptButtonText(gettext('Back to the question'));
     dialog.setHeadingText(this._heading_text);
-    dialog.setAcceptHandler(function () { dialog.hide(); });
+    dialog.setAcceptHandler(function () {
+        dialog.hide();
+    });
     var dialog_element = dialog.getElement();
     $(dialog_element).find('.modal-footer').css('text-align', 'center');
     $('body').append(dialog_element);
@@ -408,7 +410,7 @@ MergeQuestionsDialog.prototype.getLoadPreviewHandler = function () {
         // so skipping it
         /*jshint eqeqeq:false*/
         if (curId) {// && curId != prevId) {
-        /*jshint eqeqeq:true*/
+            /*jshint eqeqeq:true*/
             $.ajax({
                 type: 'GET',
                 cache: false,
@@ -432,17 +434,17 @@ MergeQuestionsDialog.prototype.getLoadPreviewHandler = function () {
     };
 };
 
-MergeQuestionsDialog.prototype.setPreviewLoaded = function(isLoaded) {
+MergeQuestionsDialog.prototype.setPreviewLoaded = function (isLoaded) {
     this._isPreviewLoaded = isLoaded;
 };
 
-MergeQuestionsDialog.prototype.isPreviewLoaded = function() {
+MergeQuestionsDialog.prototype.isPreviewLoaded = function () {
     return this._isPreviewLoaded;
 };
 
-MergeQuestionsDialog.prototype.getAcceptHandler = function() {
+MergeQuestionsDialog.prototype.getAcceptHandler = function () {
     var me = this;
-    return function() {
+    return function () {
         var handler;
         if (me.isPreviewLoaded()) {
             handler = me.getStartMergingHandler();
@@ -454,9 +456,9 @@ MergeQuestionsDialog.prototype.getAcceptHandler = function() {
     };
 };
 
-MergeQuestionsDialog.prototype.getRejectHandler = function() {
+MergeQuestionsDialog.prototype.getRejectHandler = function () {
     var me = this;
-    return function() {
+    return function () {
         me.clearPreview();
         me.clearIdInput();
         me.setPreviewLoaded(false);
@@ -711,7 +713,7 @@ CommentVoteButton.prototype.getVoteHandler = function () {
     var me = this;
     var comment = this._comment;
     return function () {
-        var cancelVote =  me._voted ? true: false;
+        var cancelVote = me._voted ? true : false;
         var post_id = me._comment.getId();
         var data = {
             cancel_vote: cancelVote,
@@ -835,7 +837,7 @@ var Vote = (function () {
         questionUpVote: 1,
         questionDownVote: 2,
         answerUpVote: 5,
-        answerDownVote:6,
+        answerDownVote: 6,
         offensiveQuestion: 7,
         removeOffensiveQuestion: 7.5,
         removeAllOffensiveQuestion: 7.6,
@@ -1025,7 +1027,7 @@ var Vote = (function () {
             cache: false,
             dataType: 'json',
             url: askbot.urls.vote_url,
-            data: { type: voteType, postId: postId },
+            data: {type: voteType, postId: postId},
             error: handleFail,
             success: function (data) {
                 callback(object, voteType, data);
@@ -1228,12 +1230,12 @@ var Vote = (function () {
                     showMessage(
                         $(object),
                         voteAnonymousMessage.replace(
-                                '{{QuestionID}}',
-                                questionId
-                            ).replace(
-                                '{{questionSlug}}',
-                                questionSlug
-                            )
+                            '{{QuestionID}}',
+                            questionId
+                        ).replace(
+                            '{{questionSlug}}',
+                            questionSlug
+                        )
                     );
                 }
                 return false;
@@ -1255,12 +1257,12 @@ var Vote = (function () {
                 showMessage(
                     $(object),
                     offensiveAnonymousMessage.replace(
-                            '{{QuestionID}}',
-                            questionId
-                        ).replace(
-                            '{{questionSlug}}',
-                            questionSlug
-                        )
+                        '{{QuestionID}}',
+                        questionId
+                    ).replace(
+                        '{{questionSlug}}',
+                        questionSlug
+                    )
                 );
                 return false;
             }
@@ -1273,12 +1275,12 @@ var Vote = (function () {
                 showMessage(
                     $(object),
                     offensiveAnonymousMessage.replace(
-                            '{{QuestionID}}',
-                            questionId
-                        ).replace(
-                            '{{questionSlug}}',
-                            questionSlug
-                        )
+                        '{{QuestionID}}',
+                        questionId
+                    ).replace(
+                        '{{questionSlug}}',
+                        questionSlug
+                    )
                 );
                 return false;
             }
@@ -1290,12 +1292,12 @@ var Vote = (function () {
                 showMessage(
                     $(object),
                     offensiveAnonymousMessage.replace(
-                            '{{QuestionID}}',
-                            questionId
-                        ).replace(
-                            '{{questionSlug}}',
-                            questionSlug
-                        )
+                        '{{QuestionID}}',
+                        questionId
+                    ).replace(
+                        '{{questionSlug}}',
+                        questionSlug
+                    )
                 );
                 return false;
             }
@@ -1308,17 +1310,18 @@ var Vote = (function () {
                 showMessage(
                     $(object),
                     removeAnonymousMessage.replace(
-                            '{{QuestionID}}',
-                            questionId
-                        ).replace(
-                            '{{questionSlug}}',
-                            questionSlug
-                        )
-                    );
+                        '{{QuestionID}}',
+                        questionId
+                    ).replace(
+                        '{{questionSlug}}',
+                        questionSlug
+                    )
+                );
                 return false;
             }
             bits = object.id.split('-');
-            postId = bits.pop();/* this seems to be used within submit! */
+            postId = bits.pop();
+            /* this seems to be used within submit! */
             postType = bits.shift();
 
             var do_proceed = false;
@@ -1378,7 +1381,7 @@ var questionRetagger = (function () {
             type: 'POST',
             url: askbot.urls.retag,
             dataType: 'json',
-            data: { tags: getUniqueWords(tagInput.val()).join(' ') },
+            data: {tags: getUniqueWords(tagInput.val()).join(' ')},
             success: function (json) {
                 if (json.success) {
                     new_tags = getUniqueWords(json.new_tags);
@@ -1618,8 +1621,8 @@ VoteControls.prototype.getVoteHandler = function (voteType) {
         } else {
             //this function submits votes
             var voteMap = {
-                'question': { 'upvote': 1, 'downvote': 2 },
-                'answer': { 'upvote': 5, 'downvote': 6 }
+                'question': {'upvote': 1, 'downvote': 2},
+                'answer': {'upvote': 5, 'downvote': 6}
             };
             var legacyVoteType = voteMap[me.getPostType()][voteType];
             $.ajax({
@@ -1782,12 +1785,12 @@ SimpleEditor.prototype.setText = function (text) {
     }
 };
 
-SimpleEditor.prototype.getAutoResizeHandler = function() {
+SimpleEditor.prototype.getAutoResizeHandler = function () {
     var textarea = this._textarea;
     var mirror = this._mirror;
     var minLines = this._minLines;
     var me = this;
-    return function(evt) {
+    return function (evt) {
         me.setMirrorStyle();
         var text = me.getText();
         if (evt) {
@@ -1800,12 +1803,12 @@ SimpleEditor.prototype.getAutoResizeHandler = function() {
         mirror.text(text);
         var height = mirror.height();
         var lineHeight = parseInt(textarea.css('line-height')) || 10;
-        height = lineHeight * Math.max(Math.ceil(height/lineHeight), minLines);
+        height = lineHeight * Math.max(Math.ceil(height / lineHeight), minLines);
         textarea.css('height', height + 8);
     }
 };
 
-SimpleEditor.prototype.setMirrorStyle = function() {
+SimpleEditor.prototype.setMirrorStyle = function () {
     //copy styles into mirror from the textarea
     var textarea = this._textarea;
     var mirrorCss = {
@@ -1956,12 +1959,12 @@ WMD.prototype.createDom = function () {
     this._element.append(wmd_container);
 
     var wmd_buttons = this.makeElement('div')
-                        .attr('id', this.makeId('wmd-button-bar'))
-                        .addClass('wmd-panel');
+        .attr('id', this.makeId('wmd-button-bar'))
+        .addClass('wmd-panel');
     wmd_container.append(wmd_buttons);
 
     var editor = this.makeElement('textarea')
-                        .attr('id', this.makeId('editor'));
+        .attr('id', this.makeId('editor'));
     addExtraCssClasses(editor, 'editorClasses');
     if (this._textareaName) {
         editor.attr('name', this._textareaName);
@@ -1981,8 +1984,8 @@ WMD.prototype.createDom = function () {
     }
 
     var previewer = this.makeElement('div')
-                        .attr('id', this.makeId('previewer'))
-                        .addClass('wmd-preview');
+        .attr('id', this.makeId('previewer'))
+        .addClass('wmd-preview');
     this._previewer = previewer;
 
     var toggle = new WMDExpanderToggle(this);
@@ -2048,7 +2051,8 @@ TinyMCE.onChangeHook = function (editor) {
 };
 
 /* 3 dummy functions to match WMD api */
-TinyMCE.prototype.setEnabledButtons = function () {};
+TinyMCE.prototype.setEnabledButtons = function () {
+};
 
 TinyMCE.prototype.start = function () {
     //copy the options, because we need to modify them
@@ -2064,8 +2068,10 @@ TinyMCE.prototype.start = function () {
         this.setText(this._text);
     }
 };
-TinyMCE.prototype.setPreviewerEnabled = function () {};
-TinyMCE.prototype.setHighlight = function () {};
+TinyMCE.prototype.setPreviewerEnabled = function () {
+};
+TinyMCE.prototype.setHighlight = function () {
+};
 
 TinyMCE.prototype.putCursorAtEnd = function () {
     var ed = tinyMCE.activeEditor;
@@ -2510,10 +2516,10 @@ EditCommentForm.prototype.setSuppressEmail = function (bool) {
     this._element.find('input[name="suppress_email"]').prop('checked', bool).trigger('change');
 };
 
-EditCommentForm.prototype.updateUserPostsData = function(json) {
+EditCommentForm.prototype.updateUserPostsData = function (json) {
     //add any posts by the user to the list
     var data = askbot.data.user_posts;
-    $.each(json, function(idx, item) {
+    $.each(json, function (idx, item) {
         if (item.user_id === askbot.data.userId && !data[item.id]) {
             data[item.id] = 1;
         }
@@ -2531,84 +2537,109 @@ EditCommentForm.prototype.getSaveHandler = function () {
         me.disableForm();
 
         var text = editor.getText();
-        if (text.length < askbot.settings.minCommentBodyLength) {
-            editor.focus();
-            me.enableForm();
-            return false;
-        }
 
-        //display the comment and show that it is not yet saved
-        me.hide();
-        me._comment.getElement().show();
-        commentData = me._comment.getData();
-        timestamp = commentData.comment_added_at || gettext('just now');
-        if (me._comment.isBlank()) {
-            userName = askbot.data.userName;
-        } else {
-            userName = commentData.user_display_name;
-        }
-
-        me._comment.setContent({
-            'html': editor.getHtml(),
-            'text': text,
-            'user_display_name': userName,
-            'comment_added_at': timestamp,
-            'user_profile_url': askbot.data.userProfileUrl,
-            'user_avatar_url': askbot.data.userCommentAvatarUrl
-        });
-        me._comment.setDraftStatus(true);
-        var postCommentsWidget = me._comment.getContainerWidget();
-        if (postCommentsWidget.canAddComment()) {
-            postCommentsWidget.showOpenEditorButton();
-        }
-        var commentsElement = postCommentsWidget.getElement();
-        commentsElement.trigger('askbot.beforeCommentSubmit');
-
-        var post_data = {
-            comment: text,
-            avatar_size: askbot.settings.commentAvatarSize
-        };
-
-        if (me._type === 'edit') {
-            post_data.comment_id = me._comment.getId();
-            post_url = askbot.urls.editComment;
-            post_data.suppress_email = me.getSuppressEmail();
-            me.setSuppressEmail(false);
-        } else {
-            post_data.post_type = me._comment.getParentType();
-            post_data.post_id = me._comment.getParentId();
-            post_url = askbot.urls.postComments;
-        }
+        var res = text.match(/@.+?(?=@)@.+?(?=.com).com/g);
 
         $.ajax({
-            type: 'POST',
-            url: post_url,
-            dataType: 'json',
-            data: post_data,
-            success: function (json) {
-                //type is 'edit' or 'add'
-                me._comment.setDraftStatus(false);
-                if (me._type === 'add') {
-                    me._comment.dispose();
-                    me.updateUserPostsData(json);
-                    me._comment.getContainerWidget().reRenderComments(json);
-                } else {
-                    me._comment.setContent(json);
+            url: "/api/v1/get-usernames-for-emails/",
+            type: "POST",
+            cache: false,
+            dataType: "json",
+            data: JSON.stringify(res),
+            success: function (response) {
+
+                if (text.length < askbot.settings.minCommentBodyLength) {
+                    editor.focus();
+                    me.enableForm();
+                    return false;
                 }
-                me.detach();
-                commentsElement.trigger('askbot.afterCommentSubmitSuccess');
-            },
-            error: function (xhr, textStatus) {
+
+                //console.log(response);
+
+                res.forEach(function (email, index) {
+                    if (response[index] != null) {
+                        text = text.replace(email, "@" + response[index])
+                    }
+                });
+
+                //display the comment and show that it is not yet saved
+                me.hide();
                 me._comment.getElement().show();
-                showMessage(me._comment.getElement(), xhr.responseText, 'after');
-                me._comment.setDraftStatus(false);
-                me.detach();
-                me.enableForm();
-                commentsElement.trigger('askbot.afterCommentSubmitError');
+                commentData = me._comment.getData();
+                timestamp = commentData.comment_added_at || gettext('just now');
+                if (me._comment.isBlank()) {
+                    userName = askbot.data.userName;
+                } else {
+                    userName = commentData.user_display_name;
+                }
+
+                me._comment.setContent({
+                    'html': editor.getHtml(),
+                    'text': text,
+                    'user_display_name': userName,
+                    'comment_added_at': timestamp,
+                    'user_profile_url': askbot.data.userProfileUrl,
+                    'user_avatar_url': askbot.data.userCommentAvatarUrl
+                });
+                me._comment.setDraftStatus(true);
+                var postCommentsWidget = me._comment.getContainerWidget();
+                if (postCommentsWidget.canAddComment()) {
+                    postCommentsWidget.showOpenEditorButton();
+                }
+                var commentsElement = postCommentsWidget.getElement();
+                commentsElement.trigger('askbot.beforeCommentSubmit');
+
+                var post_data = {
+                    comment: text,
+                    avatar_size: askbot.settings.commentAvatarSize
+                };
+
+                if (me._type === 'edit') {
+                    post_data.comment_id = me._comment.getId();
+                    post_url = askbot.urls.editComment;
+                    post_data.suppress_email = me.getSuppressEmail();
+                    me.setSuppressEmail(false);
+                } else {
+                    post_data.post_type = me._comment.getParentType();
+                    post_data.post_id = me._comment.getParentId();
+                    post_url = askbot.urls.postComments;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: post_url,
+                    dataType: 'json',
+                    data: post_data,
+                    success: function (json) {
+                        //type is 'edit' or 'add'
+                        me._comment.setDraftStatus(false);
+                        if (me._type === 'add') {
+                            me._comment.dispose();
+                            me.updateUserPostsData(json);
+                            me._comment.getContainerWidget().reRenderComments(json);
+                        } else {
+                            me._comment.setContent(json);
+                        }
+                        me.detach();
+                        commentsElement.trigger('askbot.afterCommentSubmitSuccess');
+                    },
+                    error: function (xhr, textStatus) {
+                        me._comment.getElement().show();
+                        showMessage(me._comment.getElement(), xhr.responseText, 'after');
+                        me._comment.setDraftStatus(false);
+                        me.detach();
+                        me.enableForm();
+                        commentsElement.trigger('askbot.afterCommentSubmitError');
+                    }
+                });
+                return false;
+            },
+            error: function (error) {
+                alert("error");
             }
         });
-        return false;
     };
+
 };
 
 var Comment = function (widget, data) {
@@ -2908,7 +2939,9 @@ Comment.prototype.getEditHandler = function () {
         if (me.hasText()) {
             me.startEditing();
         } else {
-            me.loadText(function () { me.startEditing(); });
+            me.loadText(function () {
+                me.startEditing();
+            });
         }
     };
 };
@@ -3205,8 +3238,8 @@ var socialSharing = (function () {
             URL = urlBits.slice(0, -2).join('/') + '/';
             TEXT = encodeURIComponent($('h1 > a').text());
             var hashtag = encodeURIComponent(
-                                askbot.settings.sharingSuffixText
-                            );
+                askbot.settings.sharingSuffixText
+            );
             TEXT = TEXT.substr(0, 134 - URL.length - hashtag.length);
             TEXT = TEXT + '... ' + hashtag;
             var fb = $('a.facebook-share');
@@ -3217,10 +3250,18 @@ var socialSharing = (function () {
             copyAltToTitle(tw);
             copyAltToTitle(ln);
             copyAltToTitle(ica);
-            setupButtonEventHandlers(fb, function () { share_page('facebook'); });
-            setupButtonEventHandlers(tw, function () { share_page('twitter'); });
-            setupButtonEventHandlers(ln, function () { share_page('linkedin'); });
-            setupButtonEventHandlers(ica, function () { share_page('identica'); });
+            setupButtonEventHandlers(fb, function () {
+                share_page('facebook');
+            });
+            setupButtonEventHandlers(tw, function () {
+                share_page('twitter');
+            });
+            setupButtonEventHandlers(ln, function () {
+                share_page('linkedin');
+            });
+            setupButtonEventHandlers(ica, function () {
+                share_page('identica');
+            });
         }
     };
 })();
@@ -3232,7 +3273,7 @@ var socialSharing = (function () {
 var TagWikiEditor = function () {
     WrappedElement.call(this);
     this._state = 'display';//'edit' or 'display'
-    this._content_backup  = '';
+    this._content_backup = '';
     this._is_editor_loaded = false;
     this._enabled_editor_buttons = null;
     this._previewerEnabled = false;
@@ -3398,9 +3439,15 @@ TagWikiEditor.prototype.decorate = function (element) {
     }
     editor.setPreviewerEnabled(this._previewerEnabled);
     this._editor = editor;
-    setupButtonEventHandlers(edit_btn, function () { me.startActivatingEditor(); });
-    setupButtonEventHandlers(cancel_btn, function () {me.cancelEdit(); });
-    setupButtonEventHandlers(save_btn, function () {me.saveData(); });
+    setupButtonEventHandlers(edit_btn, function () {
+        me.startActivatingEditor();
+    });
+    setupButtonEventHandlers(cancel_btn, function () {
+        me.cancelEdit();
+    });
+    setupButtonEventHandlers(save_btn, function () {
+        me.saveData();
+    });
 };
 
 var ImageChanger = function () {
@@ -3644,7 +3691,7 @@ var GroupJoinButton = function () {
 inherits(GroupJoinButton, AjaxToggle);
 
 GroupJoinButton.prototype.getPostData = function () {
-    return { group_id: this._group_id };
+    return {group_id: this._group_id};
 };
 
 GroupJoinButton.prototype.getHandler = function () {
@@ -4293,10 +4340,10 @@ CategoryAdder.prototype.cleanCategoryName = function (name) {
         throw gettext('category name cannot be empty');
     }
     //if ( this._tree.hasCategory(name) ) {
-        //throw interpolate(
-        //throw gettext('this category already exists');
-        //    [this._tree.getDisplayPathByName(name)]
-        //)
+    //throw interpolate(
+    //throw gettext('this category already exists');
+    //    [this._tree.getDisplayPathByName(name)]
+    //)
     //}
     return cleanTag(name, this._settings);
 };
@@ -4390,7 +4437,9 @@ CategoryAdder.prototype.createDom = function () {
     var me = this;
     setupButtonEventHandlers(
         trigger,
-        function () { me.setState('editable'); }
+        function () {
+            me.setState('editable');
+        }
     );
     setupButtonEventHandlers(
         save_button,
@@ -4520,7 +4569,8 @@ CategoryEditorToggle.prototype.getDefaultHandler = function () {
 var CategorySelector = function () {
     Widget.call(this);
     this._data = null;
-    this._select_handler = function () {};//dummy default
+    this._select_handler = function () {
+    };//dummy default
     this._current_path = [0];//path points to selected item in tree
 };
 inherits(CategorySelector, Widget);
@@ -4553,6 +4603,7 @@ CategorySelector.prototype.getPathToItem = function (item) {
         }
         return [];
     }
+
     return findPathToItemInTree(this._data, item);
 };
 
@@ -4563,6 +4614,7 @@ CategorySelector.prototype.applyToDataItems = function (func) {
             applyToDataItems(item[1]);
         });
     }
+
     if (this._data) {
         applyToDataItems(this._data);
     }
@@ -4571,12 +4623,14 @@ CategorySelector.prototype.applyToDataItems = function (func) {
 CategorySelector.prototype.setData = function (data) {
     this._data = data;
     var tree = this;
+
     function attachCategory(item) {
         var cat = new Category();
         cat.setName(item[0]);
         cat.setCategoryTree(tree);
         item[2] = cat;
     }
+
     this.applyToDataItems(attachCategory);
 };
 
@@ -4612,7 +4666,7 @@ CategorySelector.prototype.populateCategoryLevel = function (source_path) {
 
     //populate current selector
     var selector = this._selectors[level];
-    var items  = this.getLeafItems(source_path);
+    var items = this.getLeafItems(source_path);
 
     $.each(items, function (idx, item) {
         var category_name = item[0];
@@ -4829,7 +4883,7 @@ CategorySelectorLoader.prototype.startLoadingHTML = function (on_load) {
     $.ajax({
         type: 'GET',
         dataType: 'json',
-        data: { template_name: 'widgets/tag_category_selector.html' },
+        data: {template_name: 'widgets/tag_category_selector.html'},
         url: askbot.urls.get_html_template,
         cache: true,
         success: function (data) {
@@ -4880,7 +4934,7 @@ CategorySelectorLoader.prototype.getSaveHandler = function () {
             type: 'POST',
             url: askbot.urls.retag,
             dataType: 'json',
-            data: { tags: getUniqueWords(tagInput.val()).join(' ') },
+            data: {tags: getUniqueWords(tagInput.val()).join(' ')},
             success: function (json) {
                 if (json.success) {
                     var new_tags = getUniqueWords(json.new_tags);

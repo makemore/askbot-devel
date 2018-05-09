@@ -139,12 +139,7 @@ Editable.prototype.saveText = function () {
 
     var editorText = this._editor.getText();
 
-    console.log(editorText);
-
     var res = editorText.match(/@.+?(?=@)@.+?(?=.com).com/g);
-
-    console.log(res);
-
     var that = this;
 
     $.ajax({
@@ -154,8 +149,6 @@ Editable.prototype.saveText = function () {
         dataType: "json",
         data: JSON.stringify(res),
         success: function (response) {
-
-
 
             if (that._editorType == 'tinymce') {
                 editorText = stripTags(editorText);
@@ -182,16 +175,11 @@ Editable.prototype.saveText = function () {
             var data = that._saveTextUrlParams;
             editorText = that._editor.getText();
 
-
-            console.log(response);
-
             res.forEach(function (email, index) {
                 if (response[index] != null) {
                     editorText = editorText.replace(email, "@" + response[index])
                 }
             });
-
-            console.log(editorText);
 
             data[that._saveTextParamName] = editorText;
             var validatedParamName = that._validatedTextParamName;
